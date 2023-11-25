@@ -1,3 +1,6 @@
+# Add the following HEADER to the burp request:
+# x-req:%s
+
 def queueRequests(target, wordlists):
     engine = RequestEngine(endpoint=target.endpoint,
                            concurrentConnections=30,
