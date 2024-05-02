@@ -44,4 +44,4 @@ with open('webscan_result.txt', 'w') as outfile:
     for url in urls:
         outfile.write(url + '\n')
 
-print("Sorted URLs have been written to webscan_result.txt")
+print("\n[+] Sorted URLs have been written to webscan_result.txt")
