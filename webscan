@@ -31,11 +31,11 @@ soup = BeautifulSoup(html_content, 'html.parser')
 # Find all <a> tags with class 'domain'
 domain_links = soup.find_all('a', class_='domain')
 
-# Extract the URLs (text content) from the <a> tags
-urls = [link.text.strip() for link in domain_links]
+# Extract the URLs (text content) from the <a> tags and remove "www."
+urls = [link.text.strip().replace("www.", "") for link in domain_links]
 
-# Sort the URLs
-urls.sort()
+# Sort and make URLs unique
+urls = sorted(set(urls))
 
 # Print the sorted URLs
 for url in urls:
