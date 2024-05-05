@@ -2,8 +2,7 @@
 
 # Usage function
 usage() {
-    echo "Usage: $0 <input_file>"
-    echo "Example: $0 ferox-uumedu.txt"
+    echo "[+] Usage: feroxcat input_file.txt"
 }
 
 # Check if the input file is provided as an argument
