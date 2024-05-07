@@ -22,5 +22,5 @@ if [ ! -f "$input_file" ]; then
 fi
 
 # Use awk to extract the URL (assuming it's always the last field)
-# Then sort the entries by URL
-awk '{print $NF,$0}' "$input_file" | sort -k1,1 | cut -d' ' -f2-
+# Then sort the entries by URL uniquely
+awk '{print $NF,$0}' "$input_file" | sort -u -k1,1 | cut -d' ' -f2-
