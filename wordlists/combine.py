@@ -1,3 +1,5 @@
+#!/bin/python3
+
 # Function to read the content of a text file
 def read_file(file_path):
     with open(file_path, 'r') as file:
@@ -21,7 +23,7 @@ def combine_sort_unique(file_paths, output_file):
         file.writelines(combined_content)
 
 # Paths to input files
-file1_path = 'assetnote_php.txt'
+file1_path = 'httparchive_aspx_asp_cfm_svc_ashx_asmx_2024_04_28.txt'
 file2_path = 'bb_uwu.txt'
 file3_path = 'raft-large-directories-lowercase.txt'
 
