@@ -1,4 +1,6 @@
-#!/bin/python3
+#!/usr/bin/python3
+
+import sys
 
 # Function to read the content of a text file
 def read_file(file_path):
@@ -22,18 +24,17 @@ def combine_sort_unique(file_paths, output_file):
     with open(output_file, 'w') as file:
         file.writelines(combined_content)
 
-# Paths to input files
-file1_path = 'httparchive_jsp_jspa_do_action_2024_04_28.txt'
-file2_path = 'bb_uwu.txt'
-file3_path = 'raft-large-directories-lowercase.txt'
+if len(sys.argv) < 2 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
+    print("[+] Usage : python3 combine.py <input1.txt> <input2.txt> ...")
+    sys.exit(1)
+
+# Paths to input files (excluding script name)
+file_paths = sys.argv[1:]
 
 # Path to output file
 output_file_path = 'output.txt'
 
-# List of input file paths
-file_paths = [file1_path, file2_path, file3_path]
-
 # Combine, sort, and get unique content from input files
 combine_sort_unique(file_paths, output_file_path)
 
-print("Combining, sorting, and removing duplicates from the files is done. Check 'output.txt' for the result.")
+print("[+] Done! Check output.txt for the result!")
