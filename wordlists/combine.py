@@ -23,12 +23,12 @@ def combine_sort_unique(file_paths, output_file):
         file.writelines(combined_content)
 
 # Paths to input files
-file1_path = 'httparchive_aspx_asp_cfm_svc_ashx_asmx_2024_04_28.txt'
+file1_path = 'httparchive_jsp_jspa_do_action_2024_04_28.txt'
 file2_path = 'bb_uwu.txt'
 file3_path = 'raft-large-directories-lowercase.txt'
 
 # Path to output file
-output_file_path = 'combined_sorted_unique.txt'
+output_file_path = 'output.txt'
 
 # List of input file paths
 file_paths = [file1_path, file2_path, file3_path]
@@ -36,4 +36,4 @@ file_paths = [file1_path, file2_path, file3_path]
 # Combine, sort, and get unique content from input files
 combine_sort_unique(file_paths, output_file_path)
 
-print("Combining, sorting, and removing duplicates from the files is done. Check 'combined_sorted_unique.txt' for the result.")
+print("Combining, sorting, and removing duplicates from the files is done. Check 'output.txt' for the result.")
