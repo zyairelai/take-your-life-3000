@@ -7,6 +7,8 @@ def query_domains(ip):
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()
+    else:
+        return []
 
 def check_admin_paths(domain):
     paths = ["/admin", "/admin.php", "/admin.asp", "/admin.aspx", "/dede"]
