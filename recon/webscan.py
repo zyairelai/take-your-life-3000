@@ -1,3 +1,4 @@
+#!/bin/python3
 import requests
 
 def query_domains(ip):
@@ -19,6 +20,8 @@ def check_admin_paths(domain):
             if response.status_code == 200:
                 if "404" not in response.text:
                     results.append(f"200 - {full_url}")
+            elif response.status_code in [403, 404]:
+                pass  # Skip 403 and 404 errors
             else:
                 final_url = response.url
                 if final_url != full_url:
