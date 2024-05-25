@@ -1,5 +1,4 @@
 #!/bin/python3
-import sys
 import requests
 
 def query_domains(ip):
@@ -8,6 +7,7 @@ def query_domains(ip):
     if response.status_code == 200:
         return response.json()
     else:
+        print("Failed to retrieve data. Status code:", response.status_code)
         return []
 
 def check_admin_paths(domain):
@@ -33,16 +33,17 @@ def check_admin_paths(domain):
     return results
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        ip = sys.argv[1]
-    else:
-        ip = input("Enter the IP address: ")
+    ip = input("Enter the IP address: ")
+    filename = ip.replace('.', '-') + ".txt"
     
     domains_data = query_domains(ip)
-    for entry in domains_data:
-        domain = entry['domain']
-        if domain:
-            print(f"Checking domain: {domain}")
-            results = check_admin_paths(domain)
-            for result in results:
-                print("                 " + result)
+    with open(filename, 'w') as file:
+        for entry in domains_data:
+            domain = entry['domain']
+            if domain:
+                print(f"Checking domain: {domain}")
+                file.write(f"Checking domain: {domain}\n")
+                results = check_admin_paths(domain)
+                for result in results:
+                    print("                 " + result)
+                    file.write("                 " + result + "\n")
