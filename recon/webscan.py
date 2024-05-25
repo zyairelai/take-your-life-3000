@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import requests
 
 def query_domains(ip):
@@ -26,9 +24,9 @@ def check_admin_paths(domain):
                 if final_url != full_url:
                     results.append(f"{response.status_code} - {final_url}")
         except requests.Timeout:
-            results.append(f"Timeout accessing {full_url}")
+            pass  # Skip Timeout errors
         except requests.RequestException as e:
-            results.append(f"Error accessing {full_url}: {e}")
+            pass  # Skip any other RequestException errors
     return results
 
 if __name__ == "__main__":
