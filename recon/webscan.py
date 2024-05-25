@@ -1,4 +1,5 @@
 #!/bin/python3
+import sys
 import requests
 
 def query_domains(ip):
@@ -6,9 +7,6 @@ def query_domains(ip):
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()
-    else:
-        print("Failed to retrieve data. Status code:", response.status_code)
-        return []
 
 def check_admin_paths(domain):
     paths = ["/admin", "/admin.php", "/admin.asp", "/admin.aspx", "/dede"]
@@ -33,7 +31,11 @@ def check_admin_paths(domain):
     return results
 
 if __name__ == "__main__":
-    ip = input("Enter the IP address: ")
+    if len(sys.argv) > 1:
+        ip = sys.argv[1]
+    else:
+        ip = input("Enter the IP address: ")
+    
     domains_data = query_domains(ip)
     for entry in domains_data:
         domain = entry['domain']
