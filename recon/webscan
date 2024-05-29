@@ -1,49 +1,32 @@
 #!/usr/bin/python3
 
-import sys
 import requests
-from bs4 import BeautifulSoup
+import json
 
-# Check if the correct number of command line arguments is provided
-if len(sys.argv) != 2:
-    print("Usage: webscan <ip>")
-    sys.exit(1)
+def query_domains(ip):
+    url = f"https://api.webscan.cc?action=query&ip={ip}"
+    response = requests.get(url)
 
-# Get the domain from the command line arguments
-domain = sys.argv[1]
+    if response.status_code == 200:
+        data = response.json()
+        urls = [entry['domain'] for entry in data]
 
-# Make a POST request to the website
-url = 'https://www.webscan.cc/'
-payload = {'domain': domain}
-try:
-    response = requests.post(url, data=payload)
-    response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
-except requests.exceptions.RequestException as e:
-    print("Error:", e)
-    sys.exit(1)
+        # Sort and make URLs unique
+        urls = sorted(set(urls))
 
-# Extract the HTML content from the response
-html_content = response.text
+        # Print the sorted URLs
+        for url in urls:
+            print(url)
 
-# Parse the HTML content
-soup = BeautifulSoup(html_content, 'html.parser')
+        # Write the sorted URLs to webscan_result.txt
+        with open('webscan_result.txt', 'w') as outfile:
+            for url in urls:
+                outfile.write(url + '\n')
 
-# Find all <a> tags with class 'domain'
-domain_links = soup.find_all('a', class_='domain')
+        print("\n[+] Sorted URLs have been written to webscan_result.txt")
+    else:
+        print("Failed to retrieve data. Status code:", response.status_code)
 
-# Extract the URLs (text content) from the <a> tags and remove "www."
-urls = [link.text.strip().replace("www.", "") for link in domain_links]
-
-# Sort and make URLs unique
-urls = sorted(set(urls))
-
-# Print the sorted URLs
-for url in urls:
-    print(url)
-
-# Write the sorted URLs to webscan_result.txt
-with open('webscan_result.txt', 'w') as outfile:
-    for url in urls:
-        outfile.write(url + '\n')
-
-print("\n[+] Sorted URLs have been written to webscan_result.txt")
+if __name__ == "__main__":
+    ip = input("Enter the IP address: ")
+    query_domains(ip)
