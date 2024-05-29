@@ -35,7 +35,7 @@ def check_admin_paths(domain):
 if __name__ == "__main__":
     ip = input("Enter the IP address: ")
     filename = ip.replace('.', '-') + ".txt"
-    
+
     domains_data = query_domains(ip)
     with open(filename, 'w') as file:
         for entry in domains_data:
