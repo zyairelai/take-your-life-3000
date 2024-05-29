@@ -1,4 +1,5 @@
 #!/bin/python3
+import sys
 import requests
 
 def query_domains(ip):
@@ -33,13 +34,17 @@ def check_admin_paths(domain):
     return results
 
 if __name__ == "__main__":
-    ip = input("Enter the IP address: ")
-    filename = ip.replace('.', '-') + ".txt"
+    if len(sys.argv) > 1:
+        ip = sys.argv[1]
+    else:
+        ip = input("Enter the IP address: ")
+
+    filename = ip.replace('.', '-') + "-admin.txt"
 
     domains_data = query_domains(ip)
     with open(filename, 'w') as file:
         for entry in domains_data:
-            domain = entry['domain']
+            domain = entry.get('domain')
             if domain:
                 print(f"Checking domain: {domain}")
                 file.write(f"Checking domain: {domain}\n")
