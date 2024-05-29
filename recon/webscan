@@ -2,8 +2,13 @@
 
 import requests
 import json
+import sys
 
 def query_domains(ip):
+    # Replace dots with hyphens for the output filename
+    formatted_ip = ip.replace('.', '-')
+    output_filename = f"{formatted_ip}.txt"
+
     url = f"https://api.webscan.cc?action=query&ip={ip}"
     response = requests.get(url)
 
@@ -18,15 +23,19 @@ def query_domains(ip):
         for url in urls:
             print(url)
 
-        # Write the sorted URLs to webscan_result.txt
-        with open('webscan_result.txt', 'w') as outfile:
+        # Write the sorted URLs to the output file
+        with open(output_filename, 'w') as outfile:
             for url in urls:
                 outfile.write(url + '\n')
 
-        print("\n[+] Sorted URLs have been written to webscan_result.txt")
+        print(f"\n[+] Sorted URLs have been written to {output_filename}")
     else:
         print("Failed to retrieve data. Status code:", response.status_code)
 
 if __name__ == "__main__":
-    ip = input("Enter the IP address: ")
+    if len(sys.argv) > 1:
+        ip = sys.argv[1]
+    else:
+        ip = input("Enter the IP address: ")
+
     query_domains(ip)
