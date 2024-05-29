@@ -2,12 +2,9 @@
 
 ## Requirements
 ```
-python3 -m pip install -r requirements.txt
-
-fake_headers==1.0.2
-hurry==1.1
-hurry.filesize==0.9
-requests==2.31.0
+wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/requirements.txt
+pip3 install -r requirements.txt
+rm requirements.txt
 ```
 
 ## One shot install
