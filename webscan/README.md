@@ -1,6 +1,6 @@
 # c.webscan.cc
 
-#### Requirements
+## Requirements
 ```
 python3 -m pip install -r requirements.txt
 
@@ -10,10 +10,21 @@ hurry.filesize==0.9
 requests==2.31.0
 ```
 
-### One shot install
+## One shot install
+```
+wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/ihoneyBakFileScan_Modify.py
+wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/webscan.py
+wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/webscan_admin.py
+sleep(1)
+chmod a+x ihoneyBakFileScan_Modify.py && sudo mv ihoneyBakFileScan_Modify.py /usr/bin/ihoneyBakFileScan
+chmod a+x webscan.py && sudo mv webscan.py /usr/bin/webscan
+chmod a+x webscan_admin.py && sudo mv webscan_admin.py /usr/bin/webscan_admin
+```
 
-
-### ihoneyBakFileScan_Modify Usage
+## ihoneyBakFileScan Usage
+```
+ihoneyBakFileScan -f <domain-list.txt> -o <output-result.txt>
+```
 ```
 参数：
     -h --help           查看工具使用帮助
