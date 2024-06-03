@@ -1,4 +1,4 @@
-﻿000000
+000000
 00000000
 111111
 11111111
@@ -25,12 +25,17 @@ aaaaaaaa
 ABC123
 abcdef
 abcdefg
+ad88
+ad888
+ad8888
 admin
 admin
 admin12
 admin123
 admin8
+admin88
 admin888
+admin8888
 admins
 adminx
 adminxxx
