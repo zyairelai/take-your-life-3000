@@ -12,7 +12,7 @@ def query_domains(ip):
         return []
 
 def check_admin_paths(domain):
-    paths = ["/admin", "/admin.php", "/admin.asp", "/admin.aspx", "/dede"]
+    paths = ["/admin", "/admin.php", "/admin.asp", "/admin.aspx"]
     results = []
     for path in paths:
         full_url = f"http://{domain}{path}"
