@@ -14,6 +14,11 @@ def query_domains(ip):
 
     if response.status_code == 200:
         data = response.json()
+
+        if not data:
+            print(f"[+] No domain is associated with the given IP {ip}")
+            return
+
         urls = [entry['domain'] for entry in data]
 
         # Sort and make URLs unique
@@ -39,3 +44,6 @@ if __name__ == "__main__":
         ip = input("Enter the IP address: ")
 
     query_domains(ip)
+
+# To use a for loop to run the IP
+# for i in {1..255}; do webscan 127.0.0.$i; done
