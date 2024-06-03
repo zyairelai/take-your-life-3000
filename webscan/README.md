@@ -12,17 +12,17 @@ rm requirements.txt
 wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/ihoneyBakFileScan_Modify.py
 wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/webscan.py
 wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/webscan_admin.py
-wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/webscan_bulk
+wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/webscan/webscan_bulk.sh
 
 chmod a+x ihoneyBakFileScan_Modify.py
 chmod a+x webscan.py
 chmod a+x webscan_admin.py
-chmod a+x webscan_bulk
+chmod a+x webscan_bulk.sh
 
 sudo mv ihoneyBakFileScan_Modify.py /usr/bin/ihoneyBakFileScan
 sudo mv webscan.py /usr/bin/webscan
 sudo mv webscan_admin.py /usr/bin/webscan_admin
-sudo mv webscan_bulk /usr/bin/webscan_bulk
+sudo mv webscan_bulk.sh /usr/bin/webscan_bulk
 ```
 
 ## ihoneyBakFileScan Usage
