@@ -17,13 +17,13 @@ wget https://raw.githubusercontent.com/zyairelai/take-your-life-3000/main/websca
 
 chmod a+x ihoneyBakFileScan_Modify.py
 chmod a+x webscan.py
-chmod a+x webscan_admin.py
+chmod a+x webscan-admin.py
 chmod a+x webscan-class-b.sh
 chmod a+x webscan-class-c.sh
 
 sudo mv ihoneyBakFileScan_Modify.py /usr/bin/ihoneyBakFileScan
 sudo mv webscan.py /usr/bin/webscan
-sudo mv webscan_admin.py /usr/bin/webscan_admin
+sudo mv webscan-admin.py /usr/bin/webscan_admin
 sudo mv webscan-class-b.sh /usr/bin/webscan-class-b
 sudo mv webscan-class-c.sh /usr/bin/webscan-class-c
 ```
