@@ -23,7 +23,7 @@ chmod a+x webscan-class-c.sh
 
 sudo mv ihoneyBakFileScan_Modify.py /usr/bin/ihoneyBakFileScan
 sudo mv webscan.py /usr/bin/webscan
-sudo mv webscan-admin.py /usr/bin/webscan_admin
+sudo mv webscan-admin.py /usr/bin/webscan-admin
 sudo mv webscan-class-b.sh /usr/bin/webscan-class-b
 sudo mv webscan-class-c.sh /usr/bin/webscan-class-c
 ```
