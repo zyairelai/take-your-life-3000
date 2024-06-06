@@ -10,7 +10,6 @@
 1234567890
 123asd
 123go
-1'or'1'='1
 54321
 55555
 654321
@@ -39,8 +38,6 @@ admin8888
 admins
 adminx
 adminxxx
-a'or' 1=1--
-a'or'1=1--
 asd123
 asp
 aspadmin
@@ -81,6 +78,25 @@ nc
 noadmin
 nohack
 noid
+password
+phpadmin
+qwerty
+root
+sa
+sysadmin
+test
+test123
+username
+webadmin
+webadmin2
+WebShell
+welcome
+windows
+xxxxx
+zzzzzz
+1'or'1'='1
+a'or' 1=1--
+a'or'1=1--
 "or"="
 'or''='
 'or'='1'
@@ -104,20 +120,3 @@ or 'a'='a'
 ''or'='or'
 'or''=''or''='
 'or'='or'
-'or'='or'
-password
-phpadmin
-qwerty
-root
-sa
-sysadmin
-test
-test123
-username
-webadmin
-webadmin2
-WebShell
-welcome
-windows
-xxxxx
-zzzzzz
