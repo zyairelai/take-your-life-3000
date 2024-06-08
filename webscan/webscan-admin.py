@@ -3,7 +3,7 @@
 import requests
 import sys
 
-def check_paths(domains, paths, output_file):
+def check_paths(domains, paths):
     valid_urls = []
 
     for domain in domains:
@@ -22,14 +22,7 @@ def check_paths(domains, paths, output_file):
 
         valid_urls.extend(domain_valid_urls)
 
-    with open(output_file, 'w') as outfile:
-        for url in valid_urls:
-            outfile.write(url + '\n')
-
-    if valid_urls:
-        print(f"\n[+] Valid URLs have been written to {output_file}")
-    else:
-        print("\n[+] No valid URLs found.")
+    return valid_urls
 
 def main():
     if len(sys.argv) != 2:
@@ -47,7 +40,15 @@ def main():
         print(f"Error: {input_file} not found.")
         return
 
-    check_paths(domains, paths, output_file)
+    valid_urls = check_paths(domains, paths)
+
+    if valid_urls:
+        with open(output_file, 'w') as outfile:
+            for url in valid_urls:
+                outfile.write(url + '\n')
+        print(f"\n[+] Valid URLs have been written to {output_file}")
+    else:
+        print("\n[+] No valid URLs found.")
 
 if __name__ == "__main__":
     main()
