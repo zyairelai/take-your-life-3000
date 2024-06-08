@@ -48,7 +48,7 @@ def main():
                 outfile.write(url + '\n')
         print(f"\n[+] Valid URLs have been written to {output_file}")
     else:
-        print("\n[+] No valid URLs found.")
+        print("\n[+] No valid URLs found for IP " + input_file.replace('.txt', '') + "\n")
 
 if __name__ == "__main__":
     main()
