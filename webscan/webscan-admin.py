@@ -33,6 +33,8 @@ def main():
     output_file = input_file.replace('.txt', '-admin.txt')
     paths = ["/admin", "/admin.php", "/admin.asp", "/admin.aspx"]
 
+    print("[+] Scanning " + input_file.replace('.txt', ''))
+    
     try:
         with open(input_file, 'r') as file:
             domains = [line.strip() for line in file.readlines()]
