@@ -39,7 +39,7 @@ if __name__ == "__main__":
     else:
         ip = input("Enter the IP address: ")
 
-    filename = ip.replace('.', '-') + "-admin.txt"
+    filename = ip + "-admin.txt"
 
     domains_data = query_domains(ip)
     with open(filename, 'w') as file:
