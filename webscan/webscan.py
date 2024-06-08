@@ -6,8 +6,9 @@ import sys
 
 def query_domains(ip):
     # Replace dots with hyphens for the output filename
-    formatted_ip = ip.replace('.', '-')
-    output_filename = f"{formatted_ip}.txt"
+    # formatted_ip = ip.replace('.', '-')
+    # output_filename = f"{formatted_ip}.txt"
+    output_filename = ip + ".txt"
 
     url = f"https://api.webscan.cc?action=query&ip={ip}"
     response = requests.get(url)
