@@ -13,7 +13,7 @@ def check_paths(domains, paths):
         for path in paths:
             url = f"http://{domain}{path}"
             try:
-                response = requests.get(url, allow_redirects=True)
+                response = requests.get(url, allow_redirects=True, timeout=7)
                 if response.status_code == 200:
                     domain_valid_urls.append(url)
                     print(f"                 200 - {url}")
