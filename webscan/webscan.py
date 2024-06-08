@@ -1,13 +1,10 @@
 #!/usr/bin/python3
 
 import requests
-import json
 import sys
 
 def query_domains(ip):
     # Replace dots with hyphens for the output filename
-    # formatted_ip = ip.replace('.', '-')
-    # output_filename = f"{formatted_ip}.txt"
     output_filename = ip + ".txt"
 
     url = f"https://api.webscan.cc?action=query&ip={ip}"
@@ -21,6 +18,9 @@ def query_domains(ip):
             return
 
         urls = [entry['domain'] for entry in data]
+
+        # Remove "www." from each URL
+        urls = [url.replace('www.', '') for url in urls]
 
         # Sort and make URLs unique
         urls = sorted(set(urls))
