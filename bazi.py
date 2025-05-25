@@ -1,6 +1,12 @@
 #!/bin/python3
 
-from lunar_python import Solar
+try:
+    from lunar_python import Solar
+except ImportError:
+    print("library not found, run:")
+    print("pip3 install --upgrade lunar-python --break-system-packages")
+    exit(1)
+
 from datetime import datetime
 
 def calc_dayun(solar, gender):
