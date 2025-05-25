@@ -12,6 +12,7 @@ from datetime import datetime
 def calc_dayun(solar, gender):
     lunar = solar.getLunar()
     eight_char = lunar.getEightChar()
+
     is_male = gender.lower() == 'm' or gender.lower() == '1'
     yun = eight_char.getYun(is_male)
 
@@ -32,7 +33,7 @@ def calc_dayun(solar, gender):
         gan_zhi = da_yun.getGanZhi()
 
         # Only show Da Yun if it overlaps 2010–2060
-        if e_year >= 2020 and s_year <= 2060:
+        if e_year >= 2020 and s_year <= 2040:
             print(f"{s_year}-{e_year} {gan_zhi}大运")
 
 # ========== Main Script ==========
