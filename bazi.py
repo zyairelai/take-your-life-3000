@@ -26,7 +26,7 @@ def calc_dayun(solar, gender):
     # Generate Da Yun periods
     dayun_list = yun.getDaYun()
 
-    print("\n[十年大运]")
+    print("\n十年大运")
     for da_yun in dayun_list:
         s_year = da_yun.getStartYear()
         e_year = da_yun.getEndYear()
@@ -67,7 +67,7 @@ if not birth_time_input:
         # print(f"{time_range} → {birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日 {hour_gz}时")
         print(f"{birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日 {hour_gz}时")
 
-print("\n四柱命盘 (BaZi):")
+print("\n八字命盘")
 print(f"{birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日", end="")
 
 if birth_time_input:
