@@ -26,7 +26,7 @@ def calc_dayun(solar, gender):
         gan_zhi = da_yun.getGanZhi()
 
         # Only show Da Yun if it overlaps 2010–2060
-        if e_year >= 2015 and s_year <= 2060:
+        if e_year >= 2020 and s_year <= 2060:
             print(f"{s_year}-{e_year} {gan_zhi}大运")
 
 # ========== Main Script ==========
