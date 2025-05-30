@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+debug = True
+
 import ccxt, pandas, requests, socket, urllib3, os
 
 def telegram_bot_sendtext(bot_message):
@@ -54,7 +56,7 @@ def time_to_short(coin):
     pair = coin + "USDT"
     direction = heikin_ashi(get_klines(pair, "1h"))
     minute_chart = heikin_ashi(get_klines(pair, "3m"))
-    # print(direction)
+    if debug: print(direction)
 
     if direction['color'].iloc[-1] == "RED" and minute_chart['strike'].iloc[-1] and minute_chart['downtrend'].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 SHORT 💥")
