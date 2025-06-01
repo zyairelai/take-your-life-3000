@@ -38,18 +38,28 @@ def heikin_ashi(klines):
     heikin_ashi_df['EMA_10'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['EMA_20'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['EMA_100'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
-    heikin_ashi_df['SMA_25'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
-    heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
-    heikin_ashi_df['strike'] = heikin_ashi_df.apply(strike_through, axis=1)
+    heikin_ashi_df['MA_25'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
+    heikin_ashi_df['touch_MA'] = heikin_ashi_df.apply(touch_MA_25, axis=1)
+    heikin_ashi_df['touch_EMA'] = heikin_ashi_df.apply(touch_EMA_100, axis=1)
 
-    final_df = klines.merge(heikin_ashi_df, on='timestamp')
-    return final_df[['ha_open', 'ha_high', 'ha_low', 'ha_close', 'EMA_10', 'EMA_20', 'EMA_100', 'SMA_25', 'downtrend', "strike"]]
+    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', 'MA_25', 'EMA_100', 'touch_MA', 'touch_EMA']
+    for col in result_cols:
+        heikin_ashi_df[col] = heikin_ashi_df[col].apply(smart_round)
 
-def downtrend(HA):
-    if HA['EMA_20'] > HA['EMA_10'] and HA['SMA_25'] > HA["ha_close"]: return True
+    return heikin_ashi_df[result_cols]
+
+def smart_round(val):
+    if isinstance(val, float):
+        str_val = f"{val:.10f}".rstrip('0')
+        if '.' in str_val and len(str_val.split('.')[-1]) > 2:
+            return round(val, 2)
+    return val
+
+def touch_MA_25(HA):
+    if HA['ha_high'] > HA['MA_25'] and HA['ha_low'] < HA['MA_25']: return True
     else: return False
 
-def strike_through(HA):
+def touch_EMA_100(HA):
     if HA['ha_high'] > HA['EMA_100'] and HA['ha_low'] < HA['EMA_100']: return True
     else: return False
 
@@ -58,7 +68,8 @@ def time_to_short(coin):
     direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    if direction['downtrend'].iloc[-1] and direction['strike'].iloc[-1]:
+    # if direction['touch_MA'].iloc[-1] or direction['touch_EMA'].iloc[-1]:
+    if direction['touch_EMA'].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 SHORT 💥")
         exit()
 
