@@ -33,17 +33,13 @@ def heikin_ashi(klines):
     heikin_ashi_df.insert(0,'timestamp', klines['timestamp'])
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
-    heikin_ashi_df['EMA_10'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
-    heikin_ashi_df['EMA_20'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
-    heikin_ashi_df['EMA_100'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
     heikin_ashi_df['MA_25'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
+    heikin_ashi_df['EMA_100'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
     heikin_ashi_df['touch_MA'] = heikin_ashi_df.apply(touch_MA_25, axis=1)
     heikin_ashi_df['touch_EMA'] = heikin_ashi_df.apply(touch_EMA_100, axis=1)
 
     result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', 'MA_25', 'EMA_100', 'touch_MA', 'touch_EMA']
-    for col in result_cols:
-        heikin_ashi_df[col] = heikin_ashi_df[col].apply(smart_round)
-
+    for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(smart_round)
     return heikin_ashi_df[result_cols]
 
 def smart_round(val):
@@ -66,7 +62,6 @@ def time_to_short(coin):
     direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    # if direction['touch_MA'].iloc[-1] or direction['touch_EMA'].iloc[-1]:
     if direction['touch_EMA'].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 SHORT 💥")
         exit()
@@ -75,7 +70,6 @@ try:
     print("The script is running...")
     while True:
         try:
-            # for coin in ["BTC", "ETH"]: time_to_short(coin)
             for coin in ["BTC"]: time_to_short(coin)
 
         except (ccxt.RequestTimeout, ccxt.NetworkError, urllib3.exceptions.ProtocolError, urllib3.exceptions.ReadTimeoutError,
