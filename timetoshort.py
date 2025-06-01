@@ -1,8 +1,16 @@
 #!/usr/bin/python3
 
-debug = True
+import requests, socket, urllib3, os
 
-import ccxt, pandas, requests, socket, urllib3, os
+try:
+    import ccxt, pandas
+except ImportError:
+    print("library not found, run:")
+    print("pip3 install ccxt pandas --break-system-packages")
+    exit(1)
+
+debug_input = input("Debug mode (y/n): ").strip().lower()
+debug = debug_input.lower() == 'y' or debug_input.lower() == '1'
 
 def telegram_bot_sendtext(bot_message):
     print(bot_message)
