@@ -7,8 +7,11 @@ except ImportError:
     print("pip3 install ccxt pandas --break-system-packages")
     exit(1)
 
-debug_input = input("Debug mode (y/n): ").strip().lower()
-debug = debug_input.lower() == 'y' or debug_input.lower() == '1'
+touch_input = input("Default 100 EMA, enter 25 for MA: ")
+touch = 'touch_MA' if touch_input == '25' else 'touch_EMA'
+
+debug_input = input("Debug mode (y/ default n): ").strip().lower()
+debug = debug_input in ('y', '1')
 
 def telegram_bot_sendtext(bot_message):
     print(bot_message)
@@ -62,7 +65,7 @@ def time_to_short(coin):
     direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    if direction['touch_EMA'].iloc[-1]:
+    if direction[touch].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 SHORT 💥")
         exit()
 
