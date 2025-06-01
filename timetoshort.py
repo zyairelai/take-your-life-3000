@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
 import requests, socket, urllib3, os
-
-try:
-    import ccxt, pandas
+try: import ccxt, pandas
 except ImportError:
     print("library not found, run:")
     print("pip3 install ccxt pandas --break-system-packages")
