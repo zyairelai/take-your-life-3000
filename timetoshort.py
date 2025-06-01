@@ -35,8 +35,6 @@ def heikin_ashi(klines):
     heikin_ashi_df.insert(0,'timestamp', klines['timestamp'])
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
-    heikin_ashi_df["body"]  = abs(heikin_ashi_df['ha_open'] - heikin_ashi_df['ha_close'])
-    heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['EMA_10'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['EMA_20'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['EMA_100'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
@@ -45,12 +43,7 @@ def heikin_ashi(klines):
     heikin_ashi_df['strike'] = heikin_ashi_df.apply(strike_through, axis=1)
 
     final_df = klines.merge(heikin_ashi_df, on='timestamp')
-    return final_df[['ha_open', 'ha_high', 'ha_low', 'ha_close', 'color', 'EMA_10', 'EMA_20', 'EMA_100', 'SMA_25', 'downtrend', "strike"]]
-
-def color(HA):
-    if  HA['ha_open'] == HA['ha_low']: return "GREEN"
-    elif HA['ha_open'] == HA['ha_high']: return "RED"
-    else: return "-"
+    return final_df[['ha_open', 'ha_high', 'ha_low', 'ha_close', 'EMA_10', 'EMA_20', 'EMA_100', 'SMA_25', 'downtrend', "strike"]]
 
 def downtrend(HA):
     if HA['EMA_20'] > HA['EMA_10'] and HA['SMA_25'] > HA["ha_close"]: return True
@@ -62,11 +55,10 @@ def strike_through(HA):
 
 def time_to_short(coin):
     pair = coin + "USDT"
-    direction = heikin_ashi(get_klines(pair, "1h"))
-    minute_chart = heikin_ashi(get_klines(pair, "3m"))
+    direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    if direction['color'].iloc[-1] == "RED" and minute_chart['strike'].iloc[-1] and minute_chart['downtrend'].iloc[-1]:
+    if direction['downtrend'].iloc[-1] and direction['strike'].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 SHORT 💥")
         exit()
 
@@ -74,7 +66,7 @@ try:
     print("The script is running...")
     while True:
         try:
-            # for coin in ["BTC", "ETH", "SOL"]: time_to_short(coin)
+            # for coin in ["BTC", "ETH"]: time_to_short(coin)
             for coin in ["BTC"]: time_to_short(coin)
 
         except (ccxt.RequestTimeout, ccxt.NetworkError, urllib3.exceptions.ProtocolError, urllib3.exceptions.ReadTimeoutError,
