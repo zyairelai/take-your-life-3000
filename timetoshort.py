@@ -42,8 +42,13 @@ def heikin_ashi(klines):
     heikin_ashi_df['touch_EMA'] = heikin_ashi_df.apply(touch_EMA_100, axis=1)
 
     result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', 'MA_25', 'EMA_100', 'touch_MA', 'touch_EMA']
-    for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(smart_round)
+    heikin_ashi_df["MA_25"] = heikin_ashi_df["MA_25"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
+    for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
+
+def no_decimal(val):
+    if isinstance(val, float) and not pandas.isna(val): return round(val)
+    return val
 
 def smart_round(val):
     if isinstance(val, float):
