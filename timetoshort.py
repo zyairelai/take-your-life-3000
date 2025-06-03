@@ -37,12 +37,12 @@ def heikin_ashi(klines):
     heikin_ashi_df['open_below_25MA'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
     heikin_ashi_df['MA_pattern_broken'] = heikin_ashi_df.apply(MA_pattern_broken, axis=1)
     heikin_ashi_df['touch_100EMA'] = heikin_ashi_df.apply(touch_100EMA, axis=1)
-    heikin_ashi_df['MA_higher_than_100EMA'] = heikin_ashi_df.apply(MA_higher_than_100EMA, axis=1)
+    heikin_ashi_df['25MA > 100EMA'] = heikin_ashi_df.apply(MA_higher_than_100EMA, axis=1)
     # heikin_ashi_df['perfect_uptrend'] = heikin_ashi_df.apply(perfect_uptrend, axis=1)
     # heikin_ashi_df['perfect_downtrend'] = heikin_ashi_df.apply(perfect_downtrend, axis=1)
 
     result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', '10EMA', '20EMA', '100EMA', '25MA', 
-                   'open_below_25MA', 'MA_pattern_broken', 'touch_100EMA', 'MA_higher_than_100EMA']
+                   'open_below_25MA', 'MA_pattern_broken', 'touch_100EMA', '25MA > 100EMA']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -90,7 +90,7 @@ def time_to_short(coin):
     direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    if direction["MA_higher_than_100EMA"].iloc[-1]:
+    if direction["25MA > 100EMA"].iloc[-1]:
         if direction["open_below_25MA"].iloc[-1] and direction["MA_pattern_broken"].iloc[-1]:
             telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
             exit()
