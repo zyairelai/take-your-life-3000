@@ -32,15 +32,12 @@ def heikin_ashi(klines):
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
     heikin_ashi_df['10EMA'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
-    heikin_ashi_df['100EMA'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
     heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
-    heikin_ashi_df['open_below_25MA'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
-    heikin_ashi_df['MA_pattern_broken'] = heikin_ashi_df.apply(MA_pattern_broken, axis=1)
-    heikin_ashi_df['25MA > 100EMA'] = heikin_ashi_df.apply(MA_higher_than_100EMA, axis=1)
-    heikin_ashi_df['five_touch_25MA'] = five_touch_25MA(heikin_ashi_df)
+    heikin_ashi_df['touch_25MA'] = five_touch_25MA(heikin_ashi_df)
+    heikin_ashi_df['Open < 25MA'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
+    heikin_ashi_df['pattern_broken'] = heikin_ashi_df.apply(pattern_broken, axis=1)
 
-    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', '10EMA', '20EMA', '100EMA', '25MA', 
-                   'five_touch_25MA', 'open_below_25MA', 'MA_pattern_broken', '25MA > 100EMA']
+    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', '10EMA', '20EMA', '25MA', 'touch_25MA', 'Open < 25MA', 'pattern_broken']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -56,16 +53,12 @@ def smart_round(val):
             return round(val, 2)
     return val
 
-def MA_higher_than_100EMA(HA):
-    if HA['25MA'] > HA['100EMA'] : return True
-    else: return False
-
 def open_below_25MA(HA):
     if HA['25MA'] > HA['ha_open']: return True
     else: return False
 
-def MA_pattern_broken(HA):
-    if HA['25MA'] > HA['20EMA'] or HA['25MA'] > HA['10EMA']: return True
+def pattern_broken(HA):
+    if HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA']: return True
     else: return False
 
 def five_touch_25MA(df):
@@ -73,31 +66,23 @@ def five_touch_25MA(df):
     for idx in range(4, len(df)):
         for i in range(5):  # check this and previous 4 candles
             row = df.iloc[idx - i]
-            if row['ha_open'] > row['25MA'] and row['ha_close'] < row['25MA']:
+            if row['ha_high'] > row['25MA'] and row['ha_close'] < row['25MA']:
                 result[idx] = True
                 break
     return result
 
 debug_input = input("Debug mode (y/ default n): ").strip().lower()
 debug = debug_input in ('y', '1')
-
+print("The script is running...\n")
 
 def simple_short(coin):
     pair = coin + "USDT"
     direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    if direction["25MA > 100EMA"].iloc[-1]:
-        if direction["open_below_25MA"].iloc[-1] and direction["MA_pattern_broken"].iloc[-1]:
-            telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
-            exit()
-
-    if direction["five_touch_25MA"].iloc[-1] and direction["open_below_25MA"].iloc[-1]:
+    if direction["touch_25MA"].iloc[-1] and direction["Open < 25MA"].iloc[-1] and direction["pattern_broken"].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
         exit()
-
-print("The script is running...\n")
-
 try:
     while True:
         try: simple_short("BTC")
