@@ -7,12 +7,6 @@ except ImportError:
     print("pip3 install ccxt pandas --break-system-packages")
     exit(1)
 
-touch_input = input("Default 100 EMA, enter 25 for MA: ")
-touch = 'touch_MA' if touch_input == '25' else 'touch_EMA'
-
-debug_input = input("Debug mode (y/ default n): ").strip().lower()
-debug = debug_input in ('y', '1')
-
 def telegram_bot_sendtext(bot_message):
     print(bot_message)
     bot_token = os.environ.get('TELEGRAM_LIVERMORE')
@@ -36,13 +30,20 @@ def heikin_ashi(klines):
     heikin_ashi_df.insert(0,'timestamp', klines['timestamp'])
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
-    heikin_ashi_df['MA_25'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
-    heikin_ashi_df['EMA_100'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
-    heikin_ashi_df['touch_MA'] = heikin_ashi_df.apply(touch_MA_25, axis=1)
-    heikin_ashi_df['touch_EMA'] = heikin_ashi_df.apply(touch_EMA_100, axis=1)
+    heikin_ashi_df['10EMA'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
+    heikin_ashi_df['20EMA'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
+    heikin_ashi_df['100EMA'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
+    heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
+    heikin_ashi_df['open_below_25MA'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
+    heikin_ashi_df['MA_pattern_broken'] = heikin_ashi_df.apply(MA_pattern_broken, axis=1)
+    heikin_ashi_df['touch_100EMA'] = heikin_ashi_df.apply(touch_100EMA, axis=1)
+    heikin_ashi_df['MA_higher_than_100EMA'] = heikin_ashi_df.apply(MA_higher_than_100EMA, axis=1)
+    # heikin_ashi_df['perfect_uptrend'] = heikin_ashi_df.apply(perfect_uptrend, axis=1)
+    # heikin_ashi_df['perfect_downtrend'] = heikin_ashi_df.apply(perfect_downtrend, axis=1)
 
-    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', 'MA_25', 'EMA_100', 'touch_MA', 'touch_EMA']
-    heikin_ashi_df["MA_25"] = heikin_ashi_df["MA_25"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
+    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', '10EMA', '20EMA', '100EMA', '25MA', 
+                   'open_below_25MA', 'MA_pattern_broken', 'touch_100EMA', 'MA_higher_than_100EMA']
+    heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -57,34 +58,54 @@ def smart_round(val):
             return round(val, 2)
     return val
 
-def touch_MA_25(HA):
-    if HA['ha_high'] > HA['MA_25'] and HA['ha_low'] < HA['MA_25']: return True
+def MA_higher_than_100EMA(HA):
+    if HA['25MA'] > HA['100EMA'] : return True
     else: return False
 
-def touch_EMA_100(HA):
-    if HA['ha_high'] > HA['EMA_100'] and HA['ha_low'] < HA['EMA_100']: return True
+def open_below_25MA(HA):
+    if HA['25MA'] > HA['ha_open']: return True
     else: return False
+
+def MA_pattern_broken(HA):
+    if HA['25MA'] > HA['20EMA'] or HA['25MA'] > HA['10EMA']: return True
+    else: return False
+
+def touch_100EMA(HA):
+    if HA['ha_high'] > HA['100EMA'] and HA['ha_low'] < HA['100EMA']: return True
+    else: return False
+
+def perfect_uptrend(HA):
+    if HA['10EMA'] > HA['20EMA'] and HA['20EMA'] > HA['25MA']: return True
+    else: return False
+
+def perfect_downtrend(HA):
+    if HA['25MA'] > HA['20EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    else: return False
+
+debug_input = input("Debug mode (y/ default n): ").strip().lower()
+debug = debug_input in ('y', '1')
 
 def time_to_short(coin):
     pair = coin + "USDT"
     direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    if direction[touch].iloc[-1]:
-        telegram_bot_sendtext(str(coin) + " 💥 SHORT 💥")
-        exit()
+    if direction["MA_higher_than_100EMA"].iloc[-1]:
+        if direction["open_below_25MA"].iloc[-1] and direction["MA_pattern_broken"].iloc[-1]:
+            telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
+            exit()
+    else:
+        if direction["touch_100EMA"].iloc[-1]:
+            telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
+            exit()
 
+print("The script is running...\n")
 try:
-    print("The script is running...")
     while True:
-        try:
-            for coin in ["BTC"]: time_to_short(coin)
-
+        try: time_to_short("BTC")
         except (ccxt.RequestTimeout, ccxt.NetworkError, urllib3.exceptions.ProtocolError, urllib3.exceptions.ReadTimeoutError,
                 requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
                 ConnectionResetError, KeyError, OSError, socket.timeout) as e:
-
             error_message = str(e).lower()
             print(e)
-
 except KeyboardInterrupt: print("\n\nAborted.\n")
