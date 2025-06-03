@@ -36,10 +36,12 @@ def heikin_ashi(klines):
     heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
     heikin_ashi_df['open_below_25MA'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
     heikin_ashi_df['MA_pattern_broken'] = heikin_ashi_df.apply(MA_pattern_broken, axis=1)
+    heikin_ashi_df['five_touch_25MA'] = heikin_ashi_df.apply(five_touch_25MA, axis=1)
+    heikin_ashi_df['touch_100EMA'] = heikin_ashi_df.apply(touch_100EMA, axis=1)
     heikin_ashi_df['25MA > 100EMA'] = heikin_ashi_df.apply(MA_higher_than_100EMA, axis=1)
 
-    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', '10EMA', '20EMA', '100EMA', '25MA', 'open_below_25MA', 'MA_pattern_broken', '25MA > 100EMA']
-
+    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', '10EMA', '20EMA', '100EMA', '25MA', 
+                   'five_touch_25MA', 'open_below_25MA', 'MA_pattern_broken', 'touch_100EMA', '25MA > 100EMA']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -67,8 +69,19 @@ def MA_pattern_broken(HA):
     if HA['25MA'] > HA['20EMA'] or HA['25MA'] > HA['10EMA']: return True
     else: return False
 
+def five_touch_25MA(HA):
+    for i in range(5): # Checks if any of the previous 5 Heikin Ashi touch the 25MA
+        if HA['ha_high'][-1 - i] > HA['25MA'][-1 - i] and HA['ha_low'][-1 - i] < HA['25MA'][-1 - i]:
+            return True
+    return False
+
+def touch_100EMA(HA):
+    if HA['ha_high'] > HA['100EMA'] and HA['ha_low'] < HA['100EMA']: return True
+    else: return False
+
 debug_input = input("Debug mode (y/ default n): ").strip().lower()
 debug = debug_input in ('y', '1')
+
 
 def time_to_short(coin):
     pair = coin + "USDT"
@@ -80,7 +93,13 @@ def time_to_short(coin):
             telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
             exit()
 
+    # Do not run the script during price recovery
+    if direction["five_touch_25MA"].iloc[-1] and direction["open_below_25MA"].iloc[-1]:
+        telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
+        exit()
+
 print("The script is running...\n")
+
 try:
     while True:
         try: time_to_short("BTC")
