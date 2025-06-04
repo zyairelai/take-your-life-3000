@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import requests, socket, urllib3, os
+import requests, socket, os
 try: import ccxt, pandas
 except ImportError:
     print("library not found, run:")
@@ -64,7 +64,7 @@ def pattern_broken(HA):
 def five_touch_25MA(df):
     result = [False] * len(df)
     for idx in range(4, len(df)):
-        for i in range(5):  # check this and previous 4 candles
+        for i in range(5): # check this and previous 4 candles
             row = df.iloc[idx - i]
             if row['ha_high'] > row['25MA'] and row['ha_close'] < row['25MA']:
                 result[idx] = True
@@ -83,12 +83,10 @@ def simple_short(coin):
     if direction["touch_25MA"].iloc[-1] and direction["Open < 25MA"].iloc[-1] and direction["pattern_broken"].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
         exit()
+
 try:
     while True:
         try: simple_short("BTC")
-        except (ccxt.RequestTimeout, ccxt.NetworkError, urllib3.exceptions.ProtocolError, urllib3.exceptions.ReadTimeoutError,
-                requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
-                ConnectionResetError, KeyError, OSError, socket.timeout) as e:
-            error_message = str(e).lower()
-            print(e)
+        except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
+                requests.exceptions.RequestException) as e: print(f"Network error: {e}")
 except KeyboardInterrupt: print("\n\nAborted.\n")
