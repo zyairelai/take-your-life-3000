@@ -68,7 +68,7 @@ if not birth_time_input:
         print(f"{birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日 {hour_gz}时")
 
 print("\n八字命盘")
-print(f"{birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日", end="")
+print(f"{birth_year} {year_gz}年 {month_gz}月 {day_gz}日", end="")
 
 if birth_time_input:
     hour_gz = lunar.getTimeInGanZhi()
