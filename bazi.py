@@ -82,6 +82,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         print("\n [i] Cancelled")
-    
+
     except ValueError:
         print("\n [i] Invalid input")
