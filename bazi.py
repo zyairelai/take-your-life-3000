@@ -26,7 +26,6 @@ def calc_dayun(solar, gender):
     # Generate Da Yun periods
     dayun_list = yun.getDaYun()
 
-    print("\n十年大运")
     for da_yun in dayun_list:
         s_year = da_yun.getStartYear()
         e_year = da_yun.getEndYear()
@@ -38,43 +37,51 @@ def calc_dayun(solar, gender):
 
 # ========== Main Script ==========
 
-# Input section
-gender = input("Gender (m/f): ").strip().lower()
-birth_year = int(input("Birth Year: "))
-birth_month = int(input("Birth Month: "))
-birth_day = int(input("Birth Date: "))
-birth_time_input = input("Birth Time (0-23, or press Enter to skip): ").strip()
+if __name__ == "__main__":
+    try:
+        # Input section
+        gender = input("Gender (m/f): ").strip().lower()
+        birth_year = int(input("Birth Year: "))
+        birth_month = int(input("Birth Month: "))
+        birth_day = int(input("Birth Date: "))
+        birth_time_input = input("Birth Time (0-23, or press Enter to skip): ").strip()
 
-if birth_time_input:
-    birth_hour = int(birth_time_input)
-    solar = Solar.fromYmdHms(birth_year, birth_month, birth_day, birth_hour, 0, 0)
-else:
-    solar = Solar.fromYmd(birth_year, birth_month, birth_day)
+        if birth_time_input:
+            birth_hour = int(birth_time_input)
+            solar = Solar.fromYmdHms(birth_year, birth_month, birth_day, birth_hour, 0, 0)
+        else:
+            solar = Solar.fromYmd(birth_year, birth_month, birth_day)
 
-# Get Lunar object and GanZhi
-lunar = solar.getLunar()
-year_gz = lunar.getYearInGanZhi()
-month_gz = lunar.getMonthInGanZhi()
-day_gz = lunar.getDayInGanZhi()
+        # Get Lunar object and GanZhi
+        lunar = solar.getLunar()
+        year_gz = lunar.getYearInGanZhi()
+        month_gz = lunar.getMonthInGanZhi()
+        day_gz = lunar.getDayInGanZhi()
 
-if not birth_time_input:
-    print("\nHour not specified. Showing 12 possible combinations:")
-    for i in range(0, 24, 2):
-        temp_solar = Solar.fromYmdHms(birth_year, birth_month, birth_day, i, 0, 0)
-        temp_lunar = temp_solar.getLunar()
-        hour_gz = temp_lunar.getTimeInGanZhi()
-        time_range = f"{i:02d}:00-{i+1:02d}:59"
-        # print(f"{time_range} → {birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日 {hour_gz}时")
-        print(f"{birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日 {hour_gz}时")
+        if not birth_time_input:
+            print("\nHour not specified. Showing 12 possible combinations:")
+            for i in range(0, 24, 2):
+                temp_solar = Solar.fromYmdHms(birth_year, birth_month, birth_day, i, 0, 0)
+                temp_lunar = temp_solar.getLunar()
+                hour_gz = temp_lunar.getTimeInGanZhi()
+                time_range = f"{i:02d}:00-{i+1:02d}:59"
+                # print(f"{time_range} → {birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日 {hour_gz}时")
+                print(f"{birth_year}年 {year_gz}年 {month_gz}月 {day_gz}日 {hour_gz}时")
 
-print("\n八字命盘")
-print(f"{birth_year} {year_gz}年 {month_gz}月 {day_gz}日", end="")
+        print("\n【八字命盘 十年大运】\n")
+        print(f"{birth_year} {year_gz}年 {month_gz}月 {day_gz}日", end="")
 
-if birth_time_input:
-    hour_gz = lunar.getTimeInGanZhi()
-    print(f" {hour_gz}时")
-else:
-    print("")
+        if birth_time_input:
+            hour_gz = lunar.getTimeInGanZhi()
+            print(f" {hour_gz}时")
+        else:
+            print("")
 
-# Calculate and print Da Yun
-calc_dayun(solar, gender)
+        # Calculate and print Da Yun
+        calc_dayun(solar, gender)
+
+    except KeyboardInterrupt:
+        print("\n [i] Cancelled")
+    
+    except ValueError:
+        print("\n [i] Invalid input")
