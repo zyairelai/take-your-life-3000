@@ -33,10 +33,10 @@ def heikin_ashi(klines):
     heikin_ashi_df['10EMA'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
-    heikin_ashi_df['Open < 25MA'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
-    heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(obvious_downtrend, axis=1)
+    heikin_ashi_df['25MA > Open'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
+    heikin_ashi_df['25MA > 10EMA'] = heikin_ashi_df.apply(downtrend_10EMA_below_25MA, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', '10EMA', '20EMA', '25MA', 'Open < 25MA', 'downtrend']
+    result_cols = ['ha_open', 'ha_close', '10EMA', '20EMA', '25MA', '25MA > Open', '25MA > 10EMA']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -49,7 +49,7 @@ def open_below_25MA(HA):
     if HA['25MA'] > HA['ha_open']: return True
     else: return False
 
-def obvious_downtrend(HA):
+def downtrend_10EMA_below_25MA(HA):
     if HA['25MA'] > HA['10EMA']: return True
     else: return False
 
@@ -62,9 +62,11 @@ def simple_short(coin):
     direction = heikin_ashi(get_klines(pair, "3m"))
     if debug: print(direction)
 
-    if direction["Open < 25MA"].iloc[-1] and direction["downtrend"].iloc[-1]:
+    if direction["25MA > Open"].iloc[-1] and direction["25MA > 10EMA"].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
         exit()
+
+# telegram_bot_sendtext("Telegram works!")
 
 try:
     while True:
