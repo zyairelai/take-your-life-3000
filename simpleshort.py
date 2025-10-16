@@ -15,6 +15,8 @@ def telegram_bot_sendtext(bot_message):
     response = requests.get(send_text)
     return response.json()
 
+# telegram_bot_sendtext("Telegram works!")
+
 def get_klines(pair, interval):
     tohlcv_colume = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
     return pandas.DataFrame(ccxt.binance().fetch_ohlcv(pair, interval , limit=201), columns=tohlcv_colume)
@@ -30,13 +32,14 @@ def heikin_ashi(klines):
     heikin_ashi_df.insert(0,'timestamp', klines['timestamp'])
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
+    heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['10EMA'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
     heikin_ashi_df['25MA > Open'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
     heikin_ashi_df['25MA > 10EMA'] = heikin_ashi_df.apply(downtrend_10EMA_below_25MA, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', '10EMA', '20EMA', '25MA', '25MA > Open', '25MA > 10EMA']
+    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '25MA', '25MA > Open', '25MA > 10EMA']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -45,28 +48,32 @@ def no_decimal(val):
     if isinstance(val, float) and not pandas.isna(val): return round(val)
     return val
 
+def color(HA):
+    if  HA['ha_open'] == HA['ha_low']: return "GREEN"
+    elif HA['ha_open'] == HA['ha_high']: return "RED"
+    else: return "-"
+
 def open_below_25MA(HA):
     if HA['25MA'] > HA['ha_open']: return True
+    # if HA['25MA'] > HA['ha_close']: return True
     else: return False
 
 def downtrend_10EMA_below_25MA(HA):
     if HA['25MA'] > HA['10EMA']: return True
     else: return False
 
-debug_input = input("Debug mode (y/ default n): ").strip().lower()
-debug = debug_input in ('y', '1')
 print("The script is running...\n")
 
 def simple_short(coin):
     pair = coin + "USDT"
-    direction = heikin_ashi(get_klines(pair, "3m"))
-    if debug: print(direction)
+    five_minute = heikin_ashi(get_klines(pair, "5m"))
+    entry_point = heikin_ashi(get_klines(pair, "3m"))
+    print(entry_point)
 
-    if direction["25MA > Open"].iloc[-1] and direction["25MA > 10EMA"].iloc[-1]:
+    if five_minute["25MA > 10EMA"].iloc[-1] and entry_point["color"].iloc[-1] == "RED" and \
+        entry_point["25MA > Open"].iloc[-1] and entry_point["25MA > 10EMA"].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
         exit()
-
-# telegram_bot_sendtext("Telegram works!")
 
 try:
     while True:
