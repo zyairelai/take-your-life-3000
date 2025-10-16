@@ -68,7 +68,7 @@ def simple_short(coin):
     pair = coin + "USDT"
     five_minute = heikin_ashi(get_klines(pair, "5m"))
     entry_point = heikin_ashi(get_klines(pair, "3m"))
-    print(entry_point)
+    # print(entry_point)
 
     if five_minute["25MA > 10EMA"].iloc[-1] and entry_point["color"].iloc[-1] == "RED" and \
         entry_point["25MA > Open"].iloc[-1] and entry_point["25MA > 10EMA"].iloc[-1]:
