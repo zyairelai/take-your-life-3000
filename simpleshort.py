@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
-import requests, socket, os
-try: import ccxt, pandas
+try: import ccxt, pandas, requests, socket, os
 except ImportError:
     print("library not found, run:")
-    print("pip3 install ccxt pandas requests --break-system-packages")
+    print("pip3 install ccxt pandas requests socket --break-system-packages")
     exit(1)
 
 def telegram_bot_sendtext(bot_message):
@@ -37,12 +36,11 @@ def heikin_ashi(klines):
     heikin_ashi_df['20EMA'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['100EMA'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
     heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
-
     heikin_ashi_df['one_minute'] = heikin_ashi_df.apply(one_minute_condition, axis=1)
     heikin_ashi_df['three_minute'] = heikin_ashi_df.apply(three_minute_condition, axis=1)
     heikin_ashi_df['five_minute'] = heikin_ashi_df.apply(five_minute_condition, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'one_minute', 'three_minute', 'five_minute']
+    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'five_minute', 'three_minute', 'one_minute']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -75,7 +73,7 @@ def simple_short(coin):
     five_minute = heikin_ashi(get_klines(pair, "5m"))
     three_minute = heikin_ashi(get_klines(pair, "3m"))
     one_minute = heikin_ashi(get_klines(pair, "1m"))
-    print(three_minute)
+    # print(three_minute)
 
     if five_minute["five_minute"].iloc[-1] and \
         three_minute["three_minute"].iloc[-1] and one_minute["one_minute"].iloc[-1]:
