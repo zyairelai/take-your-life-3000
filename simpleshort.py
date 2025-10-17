@@ -35,11 +35,14 @@ def heikin_ashi(klines):
     heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['10EMA'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
+    heikin_ashi_df['100EMA'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
     heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
-    heikin_ashi_df['25MA > Open'] = heikin_ashi_df.apply(open_below_25MA, axis=1)
-    heikin_ashi_df['25MA > 10EMA'] = heikin_ashi_df.apply(downtrend_10EMA_below_25MA, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '25MA', '25MA > Open', '25MA > 10EMA']
+    heikin_ashi_df['one_minute'] = heikin_ashi_df.apply(one_minute_condition, axis=1)
+    heikin_ashi_df['three_minute'] = heikin_ashi_df.apply(three_minute_condition, axis=1)
+    heikin_ashi_df['five_minute'] = heikin_ashi_df.apply(five_minute_condition, axis=1)
+
+    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'one_minute', 'three_minute', 'five_minute']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -53,13 +56,16 @@ def color(HA):
     elif HA['ha_open'] == HA['ha_high']: return "RED"
     else: return "-"
 
-def open_below_25MA(HA):
-    if HA['25MA'] > HA['ha_open']: return True
-    # if HA['25MA'] > HA['ha_close']: return True
+def one_minute_condition(HA):
+    if HA['color'] == "RED" and HA['100EMA'] > HA['ha_close'] and HA['25MA'] > HA['ha_open']: return True
     else: return False
 
-def downtrend_10EMA_below_25MA(HA):
-    if HA['25MA'] > HA['10EMA']: return True
+def three_minute_condition(HA):
+    if HA['color'] == "RED" and HA['25MA'] > HA['10EMA'] and HA['25MA'] > HA['ha_open']: return True
+    else: return False
+
+def five_minute_condition(HA):
+    if HA['color'] == "RED" and HA['25MA'] > HA['10EMA']: return True
     else: return False
 
 print("The script is running...\n")
@@ -67,11 +73,12 @@ print("The script is running...\n")
 def simple_short(coin):
     pair = coin + "USDT"
     five_minute = heikin_ashi(get_klines(pair, "5m"))
-    entry_point = heikin_ashi(get_klines(pair, "3m"))
-    # print(entry_point)
+    three_minute = heikin_ashi(get_klines(pair, "3m"))
+    one_minute = heikin_ashi(get_klines(pair, "1m"))
+    print(three_minute)
 
-    if five_minute["25MA > 10EMA"].iloc[-1] and entry_point["color"].iloc[-1] == "RED" and \
-        entry_point["25MA > Open"].iloc[-1] and entry_point["25MA > 10EMA"].iloc[-1]:
+    if five_minute["five_minute"].iloc[-1] and \
+        three_minute["three_minute"].iloc[-1] and one_minute["one_minute"].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
         exit()
 
