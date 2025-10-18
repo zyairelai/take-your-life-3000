@@ -32,16 +32,15 @@ def heikin_ashi(klines):
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
     heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
+    heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
-    heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
+    heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(absolute_downtrend, axis=1)
     heikin_ashi_df['reversal'] = heikin_ashi_df.apply(trend_reversal, axis=1)
-    heikin_ashi_df['5m'] = heikin_ashi_df.apply(five_minute_condition, axis=1)
-    heikin_ashi_df['3m'] = heikin_ashi_df.apply(three_minute_condition, axis=1)
-    heikin_ashi_df['1m'] = heikin_ashi_df.apply(one_minute_condition, axis=1)
+    heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'reversal', '5m', '3m', '1m']
+    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'reversal', 'downtrend', 'smooth']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -55,44 +54,46 @@ def color(HA):
     elif HA['ha_open'] == HA['ha_high']: return "RED"
     else: return "-"
 
-def trend_reversal(HA): # 25MA 10 20 EMA downtrend, but still above 100 EMA
+def absolute_downtrend(HA):
+    if HA['100EMA'] > HA['25MA'] and HA['100EMA'] > HA['20EMA'] and HA['100EMA'] > HA['10EMA'] and \
+       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    else: return False
+
+def trend_reversal(HA): # 10/20/25 downtrend, still above 100EMA
     if HA['25MA'] > HA['100EMA'] and HA['10EMA'] > HA['100EMA'] and HA['20EMA'] > HA['100EMA'] and \
        HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
     else: return False
 
-def one_minute_condition(HA):
-    if HA['color'] == "RED" and HA['100EMA'] > HA['ha_close'] and HA['25MA'] > HA['ha_open'] and \
-       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
-    else: return False
-
-def three_minute_condition(HA):
+def smooth_criminal(HA): # 
     if HA['color'] == "RED" and HA['25MA'] > HA['10EMA'] and HA['25MA'] > HA['ha_open']: return True
-    else: return False
-
-def five_minute_condition(HA):
-    if HA['color'] == "RED" and HA['25MA'] > HA['10EMA']: return True
     else: return False
 
 print("The DESPAIR script is running...\n")
 
-def simple_short(coin):
-    pair = coin + "USDT"
+def simple_short(pair):
     five_min = heikin_ashi(get_klines(pair, "5m"))
     three_min = heikin_ashi(get_klines(pair, "3m"))
     one_min = heikin_ashi(get_klines(pair, "1m"))
     # print(five_min)
 
-    if five_min["reversal"].iloc[-1] and five_min["color"].iloc[-1] == "RED":
-        telegram_bot_sendtext(str(coin) + " 💥 REVERSAL SIGNAL 💥")
-        exit()
+    if one_min["downtrend"].iloc[-1] and one_min["color"].iloc[-1] == "RED" and \
+        three_min["color"].iloc[-1] == "RED" and five_min["color"].iloc[-1] == "RED":
+    
+        if five_min["downtrend"].iloc[-1]:
+            telegram_bot_sendtext("💥 ABSOLUTE DOWNTREND 💥")
+            exit()
 
-    if five_min["5m"].iloc[-1] and three_min["3m"].iloc[-1] and one_min["1m"].iloc[-1]:
-        telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
-        exit()
+        if five_min["reversal"].iloc[-1]:
+            telegram_bot_sendtext("💥 REVERSAL SIGNAL 💥")
+            exit()
+
+        if five_min["smooth"].iloc[-1] and three_min["smooth"].iloc[-1]:
+            telegram_bot_sendtext("💥 TIME TO SHORT 💥")
+            exit()
 
 try:
     while True:
-        try: simple_short("BTC")
+        try: simple_short("BTCUSDC")
         except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
                 requests.exceptions.RequestException) as e: print(f"Network error: {e}")
 except KeyboardInterrupt: print("\n\nAborted.\n")
