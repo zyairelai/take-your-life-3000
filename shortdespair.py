@@ -60,8 +60,8 @@ def absolute_downtrend(HA):
     else: return False
 
 def trend_reversal(HA): # 10/20/25 downtrend, still above 100EMA
-    if HA['25MA'] > HA['100EMA'] and HA['10EMA'] > HA['100EMA'] and HA['20EMA'] > HA['100EMA'] and \
-       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    if HA['25MA'] > HA['100EMA'] and HA['20EMA'] > HA['10EMA'] and \
+       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA']: return True
     else: return False
 
 def smooth_criminal(HA): # 
