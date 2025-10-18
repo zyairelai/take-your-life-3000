@@ -18,7 +18,7 @@ def telegram_bot_sendtext(bot_message):
 
 def get_klines(pair, interval):
     tohlcv_colume = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-    return pandas.DataFrame(ccxt.bybit().fetch_ohlcv(pair, interval , limit=101), columns=tohlcv_colume)
+    return pandas.DataFrame(ccxt.binance().fetch_ohlcv(pair, interval , limit=101), columns=tohlcv_colume)
 
 def heikin_ashi(klines):
     heikin_ashi_df = pandas.DataFrame(index=klines.index.values, columns=['ha_open', 'ha_high', 'ha_low', 'ha_close'])
@@ -78,22 +78,23 @@ def simple_short(pair):
 
     if one_min["downtrend"].iloc[-1] and one_min["color"].iloc[-1] == "RED" and \
         three_min["color"].iloc[-1] == "RED" and five_min["color"].iloc[-1] == "RED":
-    
+
         if five_min["downtrend"].iloc[-1]:
-            telegram_bot_sendtext("💥 ABSOLUTE DOWNTREND 💥")
+            telegram_bot_sendtext("💥💥💥 ABSOLUTE DOWNTREND 💥💥💥")
             exit()
 
         if five_min["reversal"].iloc[-1]:
-            telegram_bot_sendtext("💥 REVERSAL SIGNAL 💥")
+            telegram_bot_sendtext("💥💥 REVERSAL SIGNAL 💥💥")
             exit()
 
         if five_min["smooth"].iloc[-1] and three_min["smooth"].iloc[-1]:
             telegram_bot_sendtext("💥 TIME TO SHORT 💥")
             exit()
-
 try:
     while True:
         try: simple_short("BTCUSDC")
         except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
-                requests.exceptions.RequestException) as e: print(f"Network error: {e}")
+                requests.exceptions.RequestException) as e:
+            print(f"Network error: {e}")
+            telegram_bot_sendtext(f"Network error: {e}")
 except KeyboardInterrupt: print("\n\nAborted.\n")
