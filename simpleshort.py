@@ -37,11 +37,11 @@ def heikin_ashi(klines):
     heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['reversal'] = heikin_ashi_df.apply(trend_reversal, axis=1)
-    heikin_ashi_df['five_min'] = heikin_ashi_df.apply(five_minute_condition, axis=1)
-    heikin_ashi_df['three_min'] = heikin_ashi_df.apply(three_minute_condition, axis=1)
-    heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_minute_condition, axis=1)
+    heikin_ashi_df['5m'] = heikin_ashi_df.apply(five_minute_condition, axis=1)
+    heikin_ashi_df['3m'] = heikin_ashi_df.apply(three_minute_condition, axis=1)
+    heikin_ashi_df['1m'] = heikin_ashi_df.apply(one_minute_condition, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'reversal', 'five_min', 'three_min', 'one_min']
+    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'reversal', '5m', '3m', '1m']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -86,7 +86,7 @@ def simple_short(coin):
         telegram_bot_sendtext(str(coin) + " 💥 REVERSAL SIGNAL 💥")
         exit()
 
-    if five_min["five_min"].iloc[-1] and three_min["three_min"].iloc[-1] and one_min["one_min"].iloc[-1]:
+    if five_min["5m"].iloc[-1] and three_min["3m"].iloc[-1] and one_min["1m"].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
         exit()
 
