@@ -18,7 +18,7 @@ def telegram_bot_sendtext(bot_message):
 
 def get_klines(pair, interval):
     tohlcv_colume = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-    return pandas.DataFrame(ccxt.binance().fetch_ohlcv(pair, interval , limit=201), columns=tohlcv_colume)
+    return pandas.DataFrame(ccxt.bybit().fetch_ohlcv(pair, interval , limit=101), columns=tohlcv_colume)
 
 def heikin_ashi(klines):
     heikin_ashi_df = pandas.DataFrame(index=klines.index.values, columns=['ha_open', 'ha_high', 'ha_low', 'ha_close'])
@@ -32,15 +32,16 @@ def heikin_ashi(klines):
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
     heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
-    heikin_ashi_df['10EMA'] = heikin_ashi_df['ha_close'].ewm(span=10, adjust=False).mean()
-    heikin_ashi_df['20EMA'] = heikin_ashi_df['ha_close'].ewm(span=20, adjust=False).mean()
-    heikin_ashi_df['100EMA'] = heikin_ashi_df['ha_close'].ewm(span=100, adjust=False).mean()
-    heikin_ashi_df['25MA'] = heikin_ashi_df['ha_close'].rolling(window=25).mean()
-    heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_minute_condition, axis=1)
-    heikin_ashi_df['three_min'] = heikin_ashi_df.apply(three_minute_condition, axis=1)
+    heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
+    heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
+    heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
+    heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
+    heikin_ashi_df['reversal'] = heikin_ashi_df.apply(trend_reversal, axis=1)
     heikin_ashi_df['five_min'] = heikin_ashi_df.apply(five_minute_condition, axis=1)
+    heikin_ashi_df['three_min'] = heikin_ashi_df.apply(three_minute_condition, axis=1)
+    heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_minute_condition, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'five_min', 'three_min', 'one_min']
+    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'reversal', 'five_min', 'three_min', 'one_min']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -54,6 +55,11 @@ def color(HA):
     elif HA['ha_open'] == HA['ha_high']: return "RED"
     else: return "-"
 
+def trend_reversal(HA): # 25MA 10 20 EMA downtrend, but still above 100 EMA
+    if HA['25MA'] > HA['100EMA'] and HA['10EMA'] > HA['100EMA'] and HA['20EMA'] > HA['100EMA'] and \
+       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    else: return False
+
 def one_minute_condition(HA):
     if HA['color'] == "RED" and HA['100EMA'] > HA['ha_close'] and HA['25MA'] > HA['ha_open'] and \
        HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
@@ -64,7 +70,7 @@ def three_minute_condition(HA):
     else: return False
 
 def five_minute_condition(HA):
-    if HA['color'] == "RED" and HA['25MA'] > HA['10EMA'] and HA['100EMA'] > HA['ha_close']: return True
+    if HA['color'] == "RED" and HA['25MA'] > HA['10EMA']: return True
     else: return False
 
 print("The DESPAIR script is running...\n")
@@ -75,6 +81,10 @@ def simple_short(coin):
     three_min = heikin_ashi(get_klines(pair, "3m"))
     one_min = heikin_ashi(get_klines(pair, "1m"))
     # print(five_min)
+
+    if five_min["reversal"].iloc[-1] and five_min["color"].iloc[-1] == "RED":
+        telegram_bot_sendtext(str(coin) + " 💥 REVERSAL SIGNAL 💥")
+        exit()
 
     if five_min["five_min"].iloc[-1] and three_min["three_min"].iloc[-1] and one_min["one_min"].iloc[-1]:
         telegram_bot_sendtext(str(coin) + " 💥 TIME TO SHORT 💥")
