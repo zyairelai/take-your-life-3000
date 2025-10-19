@@ -36,11 +36,12 @@ def heikin_ashi(klines):
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
+    heikin_ashi_df['mini'] = heikin_ashi_df.apply(mini_downtrend, axis=1)
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(absolute_downtrend, axis=1)
     heikin_ashi_df['reversal'] = heikin_ashi_df.apply(trend_reversal, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'reversal', 'downtrend', 'smooth']
+    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'mini', 'downtrend', 'reversal', 'smooth']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -54,14 +55,18 @@ def color(HA):
     elif HA['ha_open'] == HA['ha_high']: return "RED"
     else: return "-"
 
+def mini_downtrend(HA):
+    if HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    else: return False
+
 def absolute_downtrend(HA):
     if HA['100EMA'] > HA['25MA'] and HA['100EMA'] > HA['20EMA'] and HA['100EMA'] > HA['10EMA'] and \
        HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
     else: return False
 
 def trend_reversal(HA): # 10/20/25 downtrend, still above 100EMA
-    if HA['25MA'] > HA['100EMA'] and HA['20EMA'] > HA['10EMA'] and \
-       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA']: return True
+    if HA['25MA'] > HA['100EMA'] and \
+       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
     else: return False
 
 def smooth_criminal(HA): # 
@@ -71,25 +76,30 @@ def smooth_criminal(HA): #
 print("The DESPAIR script is running...\n")
 
 def simple_short(pair):
+    direction = heikin_ashi(get_klines(pair, "6h"))
+    confirmation = heikin_ashi(get_klines(pair, "1h"))
     five_min = heikin_ashi(get_klines(pair, "5m"))
     three_min = heikin_ashi(get_klines(pair, "3m"))
     one_min = heikin_ashi(get_klines(pair, "1m"))
-    # print(five_min)
+    # print(direction)
 
-    if one_min["downtrend"].iloc[-1] and one_min["color"].iloc[-1] == "RED" and \
-        three_min["color"].iloc[-1] == "RED" and five_min["color"].iloc[-1] == "RED":
+    if 107000 > get_klines(pair, "1m")["low"].iloc[-1]:
+        telegram_bot_sendtext("💥💥💥 PIVOT PRICE 💥💥💥")
+        exit()
+
+    if direction["color"].iloc[-1] == "RED" and confirmation["color"].iloc[-1] == "RED" and \
+        one_min["mini"].iloc[-1] and one_min["mini"].iloc[-2] and one_min["mini"].iloc[-3] and \
+        three_min["mini"].iloc[-1] and three_min["mini"].iloc[-2] and three_min["mini"].iloc[-3] and \
+        five_min["mini"].iloc[-1] and five_min["mini"].iloc[-2] and five_min["mini"].iloc[-3]:
 
         if five_min["downtrend"].iloc[-1]:
-            telegram_bot_sendtext("💥💥💥 ABSOLUTE DOWNTREND 💥💥💥")
+            telegram_bot_sendtext("💥💥 ABSOLUTE DOWNTREND 💥💥")
             exit()
 
-        if five_min["reversal"].iloc[-1]:
-            telegram_bot_sendtext("💥💥 REVERSAL SIGNAL 💥💥")
+        if five_min["reversal"].iloc[-1] and five_min["smooth"].iloc[-1] and three_min["smooth"].iloc[-1]:
+            telegram_bot_sendtext("💥 REVERSAL SIGNAL 💥")
             exit()
 
-        if five_min["smooth"].iloc[-1] and three_min["smooth"].iloc[-1]:
-            telegram_bot_sendtext("💥 TIME TO SHORT 💥")
-            exit()
 try:
     while True:
         try: simple_short("BTCUSDC")
