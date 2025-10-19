@@ -76,19 +76,12 @@ def smooth_criminal(HA): #
 print("The DESPAIR script is running...\n")
 
 def simple_short(pair):
-    direction = heikin_ashi(get_klines(pair, "6h"))
-    confirmation = heikin_ashi(get_klines(pair, "1h"))
     five_min = heikin_ashi(get_klines(pair, "5m"))
     three_min = heikin_ashi(get_klines(pair, "3m"))
     one_min = heikin_ashi(get_klines(pair, "1m"))
     # print(direction)
 
-    if 107000 > get_klines(pair, "1m")["low"].iloc[-1]:
-        telegram_bot_sendtext("💥💥💥 PIVOT PRICE 💥💥💥")
-        exit()
-
-    if direction["color"].iloc[-1] == "RED" and confirmation["color"].iloc[-1] == "RED" and \
-        one_min["mini"].iloc[-1] and one_min["mini"].iloc[-2] and one_min["mini"].iloc[-3] and \
+    if  one_min["mini"].iloc[-1] and one_min["mini"].iloc[-2] and one_min["mini"].iloc[-3] and \
         three_min["mini"].iloc[-1] and three_min["mini"].iloc[-2] and three_min["mini"].iloc[-3] and \
         five_min["mini"].iloc[-1] and five_min["mini"].iloc[-2] and five_min["mini"].iloc[-3]:
 
