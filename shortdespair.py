@@ -2,8 +2,7 @@
 
 try: import ccxt, pandas, requests, socket, os
 except ImportError:
-    print("library not found, run:")
-    print("pip3 install ccxt pandas requests socket --break-system-packages")
+    print("library not found, run:\npip3 install ccxt pandas requests socket --break-system-packages")
     exit(1)
 
 def telegram_bot_sendtext(bot_message):
@@ -60,42 +59,42 @@ def mini_downtrend(HA):
     else: return False
 
 def absolute_downtrend(HA):
-    if HA['100EMA'] > HA['25MA'] and HA['100EMA'] > HA['20EMA'] and HA['100EMA'] > HA['10EMA'] and \
-       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    if HA['100EMA'] > HA['25MA'] and HA['100EMA'] > HA['20EMA'] and HA['100EMA'] > HA['10EMA']: return True
     else: return False
 
-def trend_reversal(HA): # 10/20/25 downtrend, still above 100EMA
-    if HA['25MA'] > HA['100EMA'] and \
-       HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+def trend_reversal(HA):
+    if HA['25MA'] > HA['100EMA']: return True
     else: return False
 
-def smooth_criminal(HA): # 
+def smooth_criminal(HA):
     if HA['color'] == "RED" and HA['25MA'] > HA['10EMA'] and HA['25MA'] > HA['ha_open']: return True
     else: return False
 
 print("The DESPAIR script is running...\n")
 
-def simple_short(pair):
+def short_despair(pair):
     five_min = heikin_ashi(get_klines(pair, "5m"))
     three_min = heikin_ashi(get_klines(pair, "3m"))
     one_min = heikin_ashi(get_klines(pair, "1m"))
     # print(direction)
 
-    if  one_min["mini"].iloc[-1] and one_min["mini"].iloc[-2] and one_min["mini"].iloc[-3] and \
+    if one_min["downtrend"].iloc[-1] and one_min["downtrend"].iloc[-2] and one_min["downtrend"].iloc[-3] and \
         three_min["mini"].iloc[-1] and three_min["mini"].iloc[-2] and three_min["mini"].iloc[-3] and \
         five_min["mini"].iloc[-1] and five_min["mini"].iloc[-2] and five_min["mini"].iloc[-3]:
 
-        if five_min["downtrend"].iloc[-1]:
-            telegram_bot_sendtext("💥💥 ABSOLUTE DOWNTREND 💥💥")
-            exit()
+        if three_min["smooth"].iloc[-1] and five_min["smooth"].iloc[-1]:
 
-        if five_min["reversal"].iloc[-1] and five_min["smooth"].iloc[-1] and three_min["smooth"].iloc[-1]:
-            telegram_bot_sendtext("💥 REVERSAL SIGNAL 💥")
-            exit()
+            if five_min["downtrend"].iloc[-1]:
+                telegram_bot_sendtext("💥💥💥 ABSOLUTE DOWNTREND 💥💥💥")
+                exit()
+
+            elif five_min["reversal"].iloc[-1]:
+                telegram_bot_sendtext("💥 REVERSAL SIGNAL 💥")
+                exit()
 
 try:
     while True:
-        try: simple_short("BTCUSDC")
+        try: short_despair("BTCUSDC")
         except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
                 requests.exceptions.RequestException) as e:
             print(f"Network error: {e}")
