@@ -73,7 +73,8 @@ def smooth_criminal(HA):
 print("The DESPAIR script is running...\n")
 
 def short_despair(pair):
-    five_min = heikin_ashi(get_klines(pair, "5m"))
+    candlestick = get_klines(pair, "5m")
+    five_min = heikin_ashi(candlestick)
     three_min = heikin_ashi(get_klines(pair, "3m"))
     one_min = heikin_ashi(get_klines(pair, "1m"))
     # print(direction)
@@ -91,6 +92,10 @@ def short_despair(pair):
             elif five_min["reversal"].iloc[-1]:
                 telegram_bot_sendtext("💥 REVERSAL SIGNAL 💥")
                 exit()
+
+    # if candlestick["high"].iloc[-1] > five_min["uptrend"].iloc[-1]:
+    #     telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
+    #     exit()
 
 try:
     while True:
