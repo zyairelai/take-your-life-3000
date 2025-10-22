@@ -30,7 +30,6 @@ def heikin_ashi(klines):
     heikin_ashi_df.insert(0,'timestamp', klines['timestamp'])
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
-    heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
@@ -40,7 +39,7 @@ def heikin_ashi(klines):
     heikin_ashi_df['reversal'] = heikin_ashi_df.apply(trend_reversal, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'mini', 'downtrend', 'reversal', 'smooth']
+    result_cols = ['ha_open', 'ha_close', '10EMA', '20EMA', '100EMA', '25MA', 'mini', 'downtrend', 'reversal', 'smooth']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -48,11 +47,6 @@ def heikin_ashi(klines):
 def no_decimal(val):
     if isinstance(val, float) and not pandas.isna(val): return round(val)
     return val
-
-def color(HA):
-    if  HA['ha_open'] == HA['ha_low']: return "GREEN"
-    elif HA['ha_open'] == HA['ha_high']: return "RED"
-    else: return "-"
 
 def mini_downtrend(HA):
     if HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
@@ -74,27 +68,30 @@ print("The DESPAIR script is running...\n")
 
 def short_despair(pair):
     candlestick = get_klines(pair, "5m")
-    five_min = heikin_ashi(candlestick)
-    three_min = heikin_ashi(get_klines(pair, "3m"))
-    one_min = heikin_ashi(get_klines(pair, "1m"))
+    minute_5m = heikin_ashi(candlestick)
+    minute_3m = heikin_ashi(get_klines(pair, "3m"))
+    minute_1m = heikin_ashi(get_klines(pair, "1m"))
     # print(direction)
 
-    if  one_min["downtrend"].iloc[-1] and one_min["downtrend"].iloc[-2] and one_min["downtrend"].iloc[-3] and \
-        one_min["mini"].iloc[-1] and one_min["mini"].iloc[-2] and one_min["mini"].iloc[-3] and \
-        three_min["mini"].iloc[-1] and three_min["mini"].iloc[-2] and three_min["mini"].iloc[-3] and \
-        five_min["mini"].iloc[-1] and five_min["mini"].iloc[-2] and five_min["mini"].iloc[-3]:
+    if  minute_3m["mini"].iloc[-1] and minute_3m["mini"].iloc[-2] and minute_3m["mini"].iloc[-3] and \
+        minute_1m["mini"].iloc[-1] and minute_1m["mini"].iloc[-2] and minute_1m["mini"].iloc[-3] and \
+        minute_1m["downtrend"].iloc[-1] and minute_1m["downtrend"].iloc[-2] and minute_1m["downtrend"].iloc[-3]:
 
-        if three_min["smooth"].iloc[-1] and five_min["smooth"].iloc[-1]:
+        if minute_3m["smooth"].iloc[-1] and minute_5m["smooth"].iloc[-1]:
 
-            if five_min["downtrend"].iloc[-1]:
+            if minute_5m["downtrend"].iloc[-1]:
                 telegram_bot_sendtext("💥💥💥 ABSOLUTE DOWNTREND 💥💥💥")
                 exit()
 
-            elif five_min["reversal"].iloc[-1]:
-                telegram_bot_sendtext("💥 REVERSAL SIGNAL 💥")
+            elif minute_5m["reversal"].iloc[-1]:
+                telegram_bot_sendtext("💥💥 REVERSAL SIGNAL 💥💥")
                 exit()
 
-    # if candlestick["high"].iloc[-1] > five_min["uptrend"].iloc[-1]:
+            elif minute_5m["mini"].iloc[-1] and minute_5m["mini"].iloc[-2] and minute_5m["mini"].iloc[-3]:
+                telegram_bot_sendtext("💥 TIME TO SHORT 💥")
+                exit()
+
+    # if candlestick["high"].iloc[-1] > minute_5m["uptrend"].iloc[-1]:
     #     telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
     #     exit()
 
