@@ -67,18 +67,16 @@ def smooth_criminal(HA):
 print("The DESPAIR script is running...\n")
 
 def short_despair(pair):
-    candlestick = get_klines(pair, "5m")
-    minute_5m = heikin_ashi(candlestick)
+    minute_5m = heikin_ashi(get_klines(pair, "5m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
     minute_1m = heikin_ashi(get_klines(pair, "1m"))
-    # print(direction)
+    # print(minute_5m)
 
-    if  minute_3m["mini"].iloc[-1] and minute_3m["mini"].iloc[-2] and minute_3m["mini"].iloc[-3] and \
-        minute_1m["mini"].iloc[-1] and minute_1m["mini"].iloc[-2] and minute_1m["mini"].iloc[-3] and \
-        minute_1m["downtrend"].iloc[-1] and minute_1m["downtrend"].iloc[-2] and minute_1m["downtrend"].iloc[-3]:
-        
-        if  minute_3m["smooth"].iloc[-1] and minute_5m["smooth"].iloc[-1] and \
-            minute_5m["mini"].iloc[-1] and minute_5m["mini"].iloc[-2] and minute_5m["mini"].iloc[-3]:
+    if all(minute_1m["downtrend"].iloc[-3:]) and \
+        all(minute_1m["mini"].iloc[-3:]) and \
+        all(minute_3m["mini"].iloc[-3:]):
+
+        if all(minute_5m["mini"].iloc[-3:]) and minute_5m["smooth"].iloc[-1] and minute_3m["smooth"].iloc[-1]:
 
             if minute_5m["downtrend"].iloc[-1]:
                 telegram_bot_sendtext("💥💥💥 ABSOLUTE DOWNTREND 💥💥💥")
@@ -92,7 +90,7 @@ def short_despair(pair):
                 telegram_bot_sendtext("💥 TIME TO SHORT 💥")
                 exit()
 
-    # if candlestick["high"].iloc[-1] > minute_5m["uptrend"].iloc[-1]:
+    # if minute_5m["ha_high"].iloc[-1] >= minute_5m["25MA"].iloc[-1]:
     #     telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
     #     exit()
 
