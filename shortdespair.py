@@ -67,7 +67,7 @@ def trend_reversal(HA):
     else: return False
 
 def smooth_criminal(HA):
-    if HA['color'] == "RED" and HA['25MA'] > HA['10EMA'] and HA['25MA'] > HA['ha_open']: return True
+    if HA['25MA'] > HA['10EMA'] and HA['25MA'] > HA['ha_open']: return True
     else: return False
 
 print("The DESPAIR script is running...\n")
@@ -79,7 +79,8 @@ def short_despair(pair):
     one_min = heikin_ashi(get_klines(pair, "1m"))
     # print(direction)
 
-    if one_min["downtrend"].iloc[-1] and one_min["downtrend"].iloc[-2] and one_min["downtrend"].iloc[-3] and \
+    if  one_min["downtrend"].iloc[-1] and one_min["downtrend"].iloc[-2] and one_min["downtrend"].iloc[-3] and \
+        one_min["mini"].iloc[-1] and one_min["mini"].iloc[-2] and one_min["mini"].iloc[-3] and \
         three_min["mini"].iloc[-1] and three_min["mini"].iloc[-2] and three_min["mini"].iloc[-3] and \
         five_min["mini"].iloc[-1] and five_min["mini"].iloc[-2] and five_min["mini"].iloc[-3]:
 
