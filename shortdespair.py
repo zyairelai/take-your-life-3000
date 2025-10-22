@@ -76,8 +76,9 @@ def short_despair(pair):
     if  minute_3m["mini"].iloc[-1] and minute_3m["mini"].iloc[-2] and minute_3m["mini"].iloc[-3] and \
         minute_1m["mini"].iloc[-1] and minute_1m["mini"].iloc[-2] and minute_1m["mini"].iloc[-3] and \
         minute_1m["downtrend"].iloc[-1] and minute_1m["downtrend"].iloc[-2] and minute_1m["downtrend"].iloc[-3]:
-
-        if minute_3m["smooth"].iloc[-1] and minute_5m["smooth"].iloc[-1]:
+        
+        if  minute_3m["smooth"].iloc[-1] and minute_5m["smooth"].iloc[-1] and \
+            minute_5m["mini"].iloc[-1] and minute_5m["mini"].iloc[-2] and minute_5m["mini"].iloc[-3]:
 
             if minute_5m["downtrend"].iloc[-1]:
                 telegram_bot_sendtext("💥💥💥 ABSOLUTE DOWNTREND 💥💥💥")
@@ -87,7 +88,7 @@ def short_despair(pair):
                 telegram_bot_sendtext("💥💥 REVERSAL SIGNAL 💥💥")
                 exit()
 
-            elif minute_5m["mini"].iloc[-1] and minute_5m["mini"].iloc[-2] and minute_5m["mini"].iloc[-3]:
+            else:
                 telegram_bot_sendtext("💥 TIME TO SHORT 💥")
                 exit()
 
