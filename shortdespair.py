@@ -17,7 +17,7 @@ def telegram_bot_sendtext(bot_message):
 
 def get_klines(pair, interval):
     tohlcv_colume = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-    return pandas.DataFrame(ccxt.binance().fetch_ohlcv(pair, interval , limit=101), columns=tohlcv_colume)
+    return pandas.DataFrame(ccxt.binance().fetch_ohlcv(pair, interval , limit=31), columns=tohlcv_colume)
 
 def heikin_ashi(klines):
     heikin_ashi_df = pandas.DataFrame(index=klines.index.values, columns=['ha_open', 'ha_high', 'ha_low', 'ha_close'])
@@ -30,16 +30,14 @@ def heikin_ashi(klines):
     heikin_ashi_df.insert(0,'timestamp', klines['timestamp'])
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
-    heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
+    heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
-    heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
-    heikin_ashi_df['mini'] = heikin_ashi_df.apply(mini_downtrend, axis=1)
-    heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(absolute_downtrend, axis=1)
-    heikin_ashi_df['reversal'] = heikin_ashi_df.apply(trend_reversal, axis=1)
+    heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
+    heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
 
-    result_cols = ['ha_open', 'ha_close', '10EMA', '20EMA', '100EMA', '25MA', 'mini', 'downtrend', 'reversal', 'smooth']
+    result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -48,51 +46,32 @@ def no_decimal(val):
     if isinstance(val, float) and not pandas.isna(val): return round(val)
     return val
 
-def mini_downtrend(HA):
+def color(HA):
+    if  HA['ha_open'] == HA['ha_low']: return "GREEN"
+    elif HA['ha_open'] == HA['ha_high']: return "RED"
+    else: return "-"
+
+def downtrend(HA):
     if HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
     else: return False
 
-def absolute_downtrend(HA):
-    if HA['100EMA'] > HA['25MA'] and HA['100EMA'] > HA['20EMA'] and HA['100EMA'] > HA['10EMA']: return True
-    else: return False
-
-def trend_reversal(HA):
-    if HA['25MA'] > HA['100EMA']: return True
-    else: return False
-
 def smooth_criminal(HA):
-    if HA['25MA'] > HA['10EMA'] and HA['25MA'] > HA['ha_open']: return True
+    if HA['25MA'] > HA['ha_open']: return True
     else: return False
 
 print("The DESPAIR script is running...\n")
 
 def short_despair(pair):
+    direction = heikin_ashi(get_klines(pair, "1h"))
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
-    minute_1m = heikin_ashi(get_klines(pair, "1m"))
-    # print(minute_5m)
+    # print(minute_3m)
 
-    if all(minute_1m["downtrend"].iloc[-3:]) and \
-        all(minute_1m["mini"].iloc[-3:]) and \
-        all(minute_3m["mini"].iloc[-3:]):
-
-        if all(minute_5m["mini"].iloc[-3:]) and minute_5m["smooth"].iloc[-1] and minute_3m["smooth"].iloc[-1]:
-
-            if minute_5m["downtrend"].iloc[-1]:
-                telegram_bot_sendtext("💥💥💥 ABSOLUTE DOWNTREND 💥💥💥")
-                exit()
-
-            elif minute_5m["reversal"].iloc[-1]:
-                telegram_bot_sendtext("💥💥 REVERSAL SIGNAL 💥💥")
-                exit()
-
-            else:
-                telegram_bot_sendtext("💥 TIME TO SHORT 💥")
-                exit()
-
-    # if minute_5m["ha_high"].iloc[-1] >= minute_5m["25MA"].iloc[-1]:
-    #     telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
-    #     exit()
+    if  direction["color"].iloc[-1] != "GREEN" and \
+        minute_5m["smooth"].iloc[-1] and all(minute_5m["downtrend"].iloc[-3:]) and \
+        minute_3m["smooth"].iloc[-1] and all(minute_3m["downtrend"].iloc[-3:]):
+        telegram_bot_sendtext("💥 TIME TO SHORT 💥")
+        exit()
 
 try:
     while True:
@@ -101,4 +80,5 @@ try:
                 requests.exceptions.RequestException) as e:
             print(f"Network error: {e}")
             telegram_bot_sendtext(f"Network error: {e}")
+            exit()
 except KeyboardInterrupt: print("\n\nAborted.\n")
