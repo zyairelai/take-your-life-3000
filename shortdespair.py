@@ -33,11 +33,13 @@ def heikin_ashi(klines):
     heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
+    heikin_ashi_df['100EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
+    heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_min_condition, axis=1)
 
-    result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth']
+    result_cols = ['color', '10EMA', '20EMA', '100EMA', '25MA', 'downtrend', 'smooth', 'one_min']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -59,17 +61,21 @@ def smooth_criminal(HA):
     if HA['25MA'] > HA['ha_open']: return True
     else: return False
 
+def one_min_condition(HA):
+    if HA['100EMA'] > HA['ha_open'] and HA['100EMA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    else: return False
+
 print("The DESPAIR script is running...\n")
 
 def short_despair(pair):
-    direction = heikin_ashi(get_klines(pair, "1h"))
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
+    minute_1m = heikin_ashi(get_klines(pair, "1m"))
     # print(minute_3m)
 
-    if  direction["color"].iloc[-1] != "GREEN" and \
-        minute_5m["smooth"].iloc[-1] and all(minute_5m["downtrend"].iloc[-3:]) and \
-        minute_3m["smooth"].iloc[-1] and all(minute_3m["downtrend"].iloc[-3:]):
+    if  minute_5m["smooth"].iloc[-1] and all(minute_5m["downtrend"].iloc[-3:]) and \
+        minute_3m["smooth"].iloc[-1] and all(minute_3m["downtrend"].iloc[-3:]) and \
+        minute_1m["one_min"].iloc[-1]:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
