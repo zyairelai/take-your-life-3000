@@ -35,11 +35,15 @@ def heikin_ashi(klines):
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['100EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
+    heikin_ashi_df['20MA_high'] = klines['high'].rolling(window=20).mean()
+    heikin_ashi_df['20MA_low'] = klines['low'].rolling(window=20).mean()
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
     heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_min_condition, axis=1)
+    heikin_ashi_df['fifteen'] = heikin_ashi_df.apply(one_five_condition, axis=1)
+    heikin_ashi_df['exit_signal'] = heikin_ashi_df.apply(exit_signal, axis=1)
 
-    result_cols = ['color', '10EMA', '20EMA', '100EMA', '25MA', 'downtrend', 'smooth', 'one_min']
+    result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth', 'one_min', 'fifteen', 'exit_signal']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
@@ -53,29 +57,43 @@ def color(HA):
     elif HA['ha_open'] == HA['ha_high']: return "RED"
     else: return "-"
 
-def downtrend(HA):
+def exit_signal(HA):
+    if HA['ha_high'] > HA['20MA_high']: return True
+
+def downtrend(HA): # plus mini downtrend
     if HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+    else: return False
+
+def one_min_condition(HA): # plus mini downtrend
+    if HA['100EMA'] > HA['ha_open'] and HA['100EMA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
     else: return False
 
 def smooth_criminal(HA):
     if HA['25MA'] > HA['ha_open']: return True
     else: return False
 
-def one_min_condition(HA):
-    if HA['100EMA'] > HA['ha_open'] and HA['100EMA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
+def one_five_condition(HA):
+    if HA['25MA'] > HA['ha_close']: return True
     else: return False
 
 print("The DESPAIR script is running...\n")
 
+def close_and_run(pair):
+    minute_3m = heikin_ashi(get_klines(pair, "3m"))
+    if minute_3m["exit_signal"].iloc[-1]:
+        telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
+        exit()
+
 def short_despair(pair):
+    minute_15m = heikin_ashi(get_klines(pair, "15m"))
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
-    minute_1m = heikin_ashi(get_klines(pair, "1m"))
+    # minute_1m = heikin_ashi(get_klines(pair, "1m"))
     # print(minute_3m)
 
     if  minute_5m["smooth"].iloc[-1] and all(minute_5m["downtrend"].iloc[-3:]) and \
         minute_3m["smooth"].iloc[-1] and all(minute_3m["downtrend"].iloc[-3:]) and \
-        minute_1m["one_min"].iloc[-1]:
+        minute_15m["one_min"].iloc[-1]: # minute_1m["one_min"].iloc[-1] and 
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
