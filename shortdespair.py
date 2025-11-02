@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-try: import ccxt, pandas, requests, socket, os
+try: import ccxt, pandas, requests, socket, time, os
 except ImportError:
     print("library not found, run:\npip3 install ccxt pandas requests socket --break-system-packages")
     exit(1)
@@ -34,7 +34,6 @@ def heikin_ashi(klines):
     heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
-    heikin_ashi_df['100EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['20MA_high'] = klines['high'].rolling(window=20).mean()
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
@@ -42,7 +41,6 @@ def heikin_ashi(klines):
     heikin_ashi_df['exit_signal'] = heikin_ashi_df.apply(exit_signal, axis=1)
 
     result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth', 'exit_signal']
-    heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -56,15 +54,13 @@ def color(HA):
     else: return "-"
 
 def exit_signal(HA):
-    if HA['ha_close'] > HA['20MA_high']: return True
+    return HA['ha_close'] > HA['20MA_high']
 
 def downtrend(HA):
-    if HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']: return True
-    else: return False
+    return HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']
 
 def smooth_criminal(HA):
-    if HA['25MA'] > HA['ha_open']: return True
-    else: return False
+    return HA['25MA'] > HA['ha_high']
 
 def close_and_run(pair):
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
@@ -78,15 +74,19 @@ def short_despair(pair):
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
     # print(minute_3m)
 
-    if  all(minute_15m["color"].iloc[-3:].eq("RED")) and \
-        minute_5m["smooth"].iloc[-1] and minute_5m["downtrend"].iloc[-1] and \
-        minute_3m["smooth"].iloc[-1] and all(minute_3m["downtrend"].iloc[-3:]):
+    condition15m = all(minute_15m["color"].iloc[-3:].eq("RED"))
+    condition_3m = all(minute_3m["smooth"].iloc[-3:]) and all(minute_3m["downtrend"].iloc[-3:])
+    condition_5m = minute_5m["smooth"].iloc[-1] and minute_5m["downtrend"].iloc[-1]
+    
+    if condition_3m and condition_5m and condition15m:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
 try:
     while True:
-        try: short_despair("BTCUSDC")
+        try:
+            short_despair("BTCUSDC")
+            time.sleep(10)
         except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
                 requests.exceptions.RequestException) as e:
             print(f"Network error: {e}")
