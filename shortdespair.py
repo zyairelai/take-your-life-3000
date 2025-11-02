@@ -32,15 +32,18 @@ def heikin_ashi(klines):
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
     heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
+    heikin_ashi_df['7EMA'] = klines['close'].ewm(span=7, adjust=False).mean()
+    heikin_ashi_df['15EMA'] = klines['close'].ewm(span=15, adjust=False).mean()
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['20MA_high'] = klines['high'].rolling(window=20).mean()
+    heikin_ashi_df['mini'] = heikin_ashi_df.apply(mini_downtrend, axis=1)
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
     heikin_ashi_df['exit_signal'] = heikin_ashi_df.apply(exit_signal, axis=1)
 
-    result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth', 'exit_signal']
+    result_cols = ['color', '10EMA', '20EMA', '25MA', 'mini', 'downtrend', 'smooth', 'exit_signal']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -56,6 +59,9 @@ def color(HA):
 def exit_signal(HA):
     return HA['ha_close'] > HA['20MA_high']
 
+def mini_downtrend(HA):
+    return HA['15EMA'] > HA['7EMA']
+
 def downtrend(HA):
     return HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']
 
@@ -69,16 +75,16 @@ def close_and_run(pair):
         exit()
 
 def short_despair(pair):
-    minute_15m = heikin_ashi(get_klines(pair, "15m"))
+    minute_30 = heikin_ashi(get_klines(pair, "30m"))
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
     # print(minute_3m)
 
-    condition15m = all(minute_15m["color"].iloc[-3:].eq("RED"))
+    condition_30 = minute_30["mini"].iloc[-1] and minute_30["color"].iloc[-1] == "RED"
     condition_3m = all(minute_3m["smooth"].iloc[-3:]) and all(minute_3m["downtrend"].iloc[-3:])
     condition_5m = minute_5m["smooth"].iloc[-1] and minute_5m["downtrend"].iloc[-1]
     
-    if condition_3m and condition_5m and condition15m:
+    if condition_3m and condition_5m and condition_30:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
