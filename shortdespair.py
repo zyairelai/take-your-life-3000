@@ -42,7 +42,7 @@ def heikin_ashi(klines):
     heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_min_condition, axis=1)
     heikin_ashi_df['exit_signal'] = heikin_ashi_df.apply(exit_signal, axis=1)
 
-    result_cols = ['10EMA', '20EMA', '25MA', 'downtrend', 'smooth', 'one_min', 'exit_signal']
+    result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth', 'one_min', 'exit_signal']
     heikin_ashi_df["25MA"] = heikin_ashi_df["25MA"].apply(lambda x: f"{int(x)}" if pandas.notnull(x) else "")
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
