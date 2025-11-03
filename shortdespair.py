@@ -34,13 +34,13 @@ def heikin_ashi(klines):
     heikin_ashi_df["color"] = heikin_ashi_df.apply(color, axis=1)
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
+    heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
-    heikin_ashi_df['20MA_high'] = klines['high'].rolling(window=20).mean()
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
-    heikin_ashi_df['exit_signal'] = heikin_ashi_df.apply(exit_signal, axis=1)
+    heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_min_condition, axis=1)
 
-    result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth', 'exit_signal']
+    result_cols = ['ha_high', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'downtrend', 'smooth', 'one_min']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -53,33 +53,36 @@ def color(HA):
     elif HA['ha_open'] > HA['ha_close']: return "RED"
     else: return "-"
 
-def exit_signal(HA):
-    return HA['ha_close'] > HA['20MA_high']
-
 def downtrend(HA):
     return HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']
 
 def smooth_criminal(HA):
     return HA['25MA'] > HA['ha_high']
 
-def close_and_run(pair):
-    minute_3m = heikin_ashi(get_klines(pair, "3m"))
-    if minute_3m["exit_signal"].iloc[-1]:
-        telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
-        exit()
+def one_min_condition(HA):
+    return HA['100EMA'] > HA['ha_high'] and HA['100EMA'] > HA['20EMA'] and HA['100EMA'] > HA['10EMA']
 
 def short_despair(pair):
-    minute_15m = heikin_ashi(get_klines(pair, "15m"))
+    direction = heikin_ashi(get_klines(pair, "1h"))
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
+    minute_1m = heikin_ashi(get_klines(pair, "1m"))
     # print(minute_3m)
 
-    condition_15m = minute_15m["20EMA"].iloc[-1] > minute_15m["10EMA"].iloc[-1]
-    condition_3m = all(minute_3m["smooth"].iloc[-3:]) and all(minute_3m["downtrend"].iloc[-3:])
+    condition_1h = direction["color"].iloc[-1] == "RED"
     condition_5m = minute_5m["smooth"].iloc[-1] and minute_5m["downtrend"].iloc[-1]
-    
-    if condition_3m and condition_5m and condition_15m:
+    condition_3m = all(minute_3m["smooth"].iloc[-3:]) and all(minute_3m["downtrend"].iloc[-3:])
+    condition_1m = all(minute_1m["smooth"].iloc[-3:]) and all(minute_1m["downtrend"].iloc[-3:]) and \
+                   all(minute_1m["one_min"].iloc[-3:])
+
+    if condition_1h and condition_5m and condition_3m and condition_1m:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
+        exit()
+
+def exit_signal(pair):
+    minute_5m = heikin_ashi(get_klines(pair, "5m"))
+    if minute_5m["ha_high"].iloc[-1] > minute_5m["25MA"].iloc[-1]:
+        telegram_bot_sendtext("💰 Exit Signal 💰")
         exit()
 
 try:
