@@ -36,12 +36,11 @@ def heikin_ashi(klines):
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['20MA_high'] = klines['high'].rolling(window=20).mean()
-    heikin_ashi_df['mini'] = heikin_ashi_df.apply(mini_downtrend, axis=1)
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
     heikin_ashi_df['exit_signal'] = heikin_ashi_df.apply(exit_signal, axis=1)
 
-    result_cols = ['color', '10EMA', '20EMA', '25MA', 'mini', 'downtrend', 'smooth', 'exit_signal']
+    result_cols = ['color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth', 'exit_signal']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -56,9 +55,6 @@ def color(HA):
 
 def exit_signal(HA):
     return HA['ha_close'] > HA['20MA_high']
-
-def mini_downtrend(HA):
-    return HA['20EMA'] > HA['10EMA']
 
 def downtrend(HA):
     return HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']
@@ -78,7 +74,7 @@ def short_despair(pair):
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
     # print(minute_3m)
 
-    condition_15m = all(minute_15m["color"].iloc[-3:].eq("RED")) and minute_15m["mini"].iloc[-1]
+    condition_15m = minute_15m["20EMA"].iloc[-1] > minute_15m["10EMA"].iloc[-1]
     condition_3m = all(minute_3m["smooth"].iloc[-3:]) and all(minute_3m["downtrend"].iloc[-3:])
     condition_5m = minute_5m["smooth"].iloc[-1] and minute_5m["downtrend"].iloc[-1]
     
