@@ -79,16 +79,16 @@ def short_despair(pair):
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
-def cooldown(pair):
-    minute_1m = heikin_ashi(get_klines(pair, "1m"))
-    if minute_1m["ha_high"].iloc[-1] > minute_1m["100EMA"].iloc[-1]:
-        telegram_bot_sendtext("🥶 COOLDOWN RESET 🥶")
-        exit()
-
 def exit_signal(pair):
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
     if minute_3m["ha_high"].iloc[-1] > minute_3m["25MA"].iloc[-1]:
         telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
+        exit()
+
+def cooldown_period(pair):
+    minute_1m = heikin_ashi(get_klines(pair, "1m"))
+    if minute_1m["ha_high"].iloc[-1] > minute_1m["100EMA"].iloc[-1]:
+        telegram_bot_sendtext("🥶 COOLDOWN RESET 🥶")
         exit()
 
 try:
