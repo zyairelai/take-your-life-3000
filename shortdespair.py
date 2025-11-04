@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-try: import ccxt, pandas, requests, socket, time, os
+import time, os
+from datetime import datetime
+try: import ccxt, pandas, requests, socket
 except ImportError:
     print("library not found, run:\npip3 install ccxt pandas requests socket --break-system-packages")
     exit(1)
@@ -67,7 +69,6 @@ def short_despair(pair):
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
     minute_1m = heikin_ashi(get_klines(pair, "1m"))
-    # print(minute_3m)
 
     condition_1h = direction["color"].iloc[-1] == "RED"
     condition_5m = minute_5m["smooth"].iloc[-1] and minute_5m["downtrend"].iloc[-1]
@@ -75,21 +76,31 @@ def short_despair(pair):
     condition_1m = all(minute_1m["smooth"].iloc[-3:]) and all(minute_1m["downtrend"].iloc[-3:]) and \
                    all(minute_1m["one_min"].iloc[-3:])
 
+    print("condition_1h: " + str(condition_1h))
+    print("condition_5m: " + str(condition_5m))
+    print("condition_3m: " + str(condition_3m))
+    print("condition_1m: " + str(condition_1m))
+    print("Last action executed @ " + datetime.now().strftime("%H:%M:%S") + "\n")
+
     if condition_1h and condition_5m and condition_3m and condition_1m:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
+    # if not (condition_1h and condition_5m and condition_3m and condition_1m):
+    #     telegram_bot_sendtext("🥶 COOLDOWN RESET 🥶")
+    #     exit()
+
 def exit_signal(pair):
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
     if minute_5m["ha_high"].iloc[-1] > minute_5m["25MA"].iloc[-1]:
-        telegram_bot_sendtext("💰 Exit Signal 💰")
+        telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
         exit()
 
 try:
     while True:
         try:
             short_despair("BTCUSDC")
-            time.sleep(5)
+            time.sleep(10)
         except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
                 requests.exceptions.RequestException) as e:
             print(f"Network error: {e}")
