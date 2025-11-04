@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import time, os
-from datetime import datetime
 try: import ccxt, pandas, requests, socket
 except ImportError:
     print("library not found, run:\npip3 install ccxt pandas requests socket --break-system-packages")
@@ -16,7 +15,6 @@ def telegram_bot_sendtext(bot_message):
     return response.json()
 
 # telegram_bot_sendtext("Telegram works!")
-print("The DESPAIR script is running...\n")
 
 def get_klines(pair, interval):
     tohlcv_colume = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
@@ -40,9 +38,8 @@ def heikin_ashi(klines):
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
-    heikin_ashi_df['one_min'] = heikin_ashi_df.apply(one_min_condition, axis=1)
 
-    result_cols = ['ha_high', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'downtrend', 'smooth', 'one_min']
+    result_cols = ['ha_high', 'color', '10EMA', '20EMA', '100EMA', '25MA', 'downtrend', 'smooth']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -61,9 +58,6 @@ def downtrend(HA):
 def smooth_criminal(HA):
     return HA['25MA'] > HA['ha_high']
 
-def one_min_condition(HA):
-    return HA['100EMA'] > HA['ha_high'] and HA['100EMA'] > HA['20EMA'] and HA['100EMA'] > HA['10EMA']
-
 def short_despair(pair):
     direction = heikin_ashi(get_klines(pair, "1h"))
     minute_5m = heikin_ashi(get_klines(pair, "5m"))
@@ -79,22 +73,19 @@ def short_despair(pair):
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
-def exit_signal(pair):
-    minute_3m = heikin_ashi(get_klines(pair, "3m"))
-    if minute_3m["ha_high"].iloc[-1] > minute_3m["25MA"].iloc[-1]:
-        telegram_bot_sendtext("💰 EXIT SIGNAL 💰")
-        exit()
-
 def cooldown_period(pair):
     minute_1m = heikin_ashi(get_klines(pair, "1m"))
     if minute_1m["ha_high"].iloc[-1] > minute_1m["100EMA"].iloc[-1]:
         telegram_bot_sendtext("🥶 COOLDOWN RESET 🥶")
         exit()
 
+# print("The DESPAIR script is running...\n")
+print("Waiting for Cooldown...\n")
+
 try:
     while True:
         try:
-            short_despair("BTCUSDC")
+            cooldown_period("BTCUSDC")
             time.sleep(10)
         except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
                 requests.exceptions.RequestException) as e:
