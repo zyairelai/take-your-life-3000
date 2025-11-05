@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import time, os
-from datetime import datetime
 try: import ccxt, pandas, requests, socket
 except ImportError:
     print("library not found, run:\npip3 install ccxt pandas requests socket --break-system-packages")
@@ -37,10 +36,12 @@ def heikin_ashi(klines):
     heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
     heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
+    heikin_ashi_df['mini'] = heikin_ashi_df.apply(mini_downtrend, axis=1)
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
+    heikin_ashi_df['uptrend'] = heikin_ashi_df.apply(uptrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
 
-    result_cols = ['ha_open', 'ha_high', 'color', '10EMA', '20EMA', '25MA', 'downtrend', 'smooth']
+    result_cols = ['ha_open', 'ha_high', 'color', '10EMA', '20EMA', '25MA', 'mini', 'downtrend', 'uptrend', 'smooth']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -53,30 +54,27 @@ def color(HA):
     elif HA['ha_open'] > HA['ha_close']: return "RED"
     else: return "-"
 
+def mini_downtrend(HA):
+    return HA['20EMA'] > HA['10EMA']
+
 def downtrend(HA):
     return HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']
+
+def uptrend(HA):
+    return HA['25MA'] < HA['20EMA'] and HA['25MA'] < HA['10EMA'] and HA['20EMA'] < HA['10EMA']
 
 def smooth_criminal(HA):
     return HA['25MA'] > HA['ha_open']
 
 def short_despair(pair):
-    direction = heikin_ashi(get_klines(pair, "1h"))
-    minute_5m = heikin_ashi(get_klines(pair, "5m"))
-    minute_3m = heikin_ashi(get_klines(pair, "3m"))
     minute_1m = heikin_ashi(get_klines(pair, "1m"))
+    minute_3m = heikin_ashi(get_klines(pair, "3m"))
 
-    condition_1h = direction["color"].iloc[-1] == "RED"
-    condition_5m = minute_5m["20EMA"].iloc[-1] > minute_5m["10EMA"].iloc[-1]
-    condition_3m = all(minute_3m["downtrend"].iloc[-3:]) and minute_3m["10EMA"].iloc[-1] > minute_3m["ha_open"].iloc[-1] 
-    condition_1m = all(minute_1m["downtrend"].iloc[-5:]) and all(minute_1m["smooth"].iloc[-5:])
+    condition_1m =  minute_1m["smooth"].iloc[-1] and all(minute_1m["downtrend"].iloc[-2:])
+    condition_3m = (minute_3m["smooth"].iloc[-1] and minute_3m["mini"].iloc[-1]) or \
+                   (all(minute_3m["color"].iloc[-5:].eq("RED")) and not(minute_1m["uptrend"].iloc[-1]))
 
-    print("condition_1h: " + str(condition_1h))
-    print("condition_5m: " + str(condition_5m))
-    print("condition_3m: " + str(condition_3m))
-    print("condition_1m: " + str(condition_1m))
-    print("Last action executed @ " + datetime.now().strftime("%H:%M:%S") + "\n")
-
-    if condition_1h and condition_5m and condition_3m and condition_1m:
+    if condition_1m and condition_3m:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
