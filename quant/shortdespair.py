@@ -72,7 +72,7 @@ def short_despair(pair):
 
     condition_1m =  minute_1m["smooth"].iloc[-1] and all(minute_1m["downtrend"].iloc[-2:])
     condition_3m = (minute_3m["smooth"].iloc[-1] and minute_3m["mini"].iloc[-1]) or \
-                   (all(minute_3m["color"].iloc[-5:].eq("RED")) and not(condition_3m["uptrend"].iloc[-1]))
+                   (all(minute_3m["color"].iloc[-5:].eq("RED")) and not(minute_3m["uptrend"].iloc[-1]))
 
     if condition_1m and condition_3m:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
