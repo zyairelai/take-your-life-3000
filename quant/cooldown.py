@@ -37,7 +37,7 @@ def heikin_ashi(klines):
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
 
-    result_cols = ['ha_high', 'ha_low', 'ha_open', 'ha_close', '25MA', '100EMA']
+    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', '25MA', '100EMA']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
