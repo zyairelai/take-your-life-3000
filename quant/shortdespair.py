@@ -71,7 +71,8 @@ def short_despair(pair):
     minute_1m = heikin_ashi(get_klines(pair, "1m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
 
-    condition_1m =  minute_1m["smooth"].iloc[-1] and all(minute_1m["downtrend"].iloc[-2:])
+    condition_1m =  minute_1m["25MA"].iloc[-3:].is_monotonic_decreasing and \
+                    minute_1m["smooth"].iloc[-1] and all(minute_1m["downtrend"].iloc[-2:])
     condition_3m = (minute_3m["smooth"].iloc[-1] and minute_3m["mini"].iloc[-1]) or \
                    (minute_3m["ha_open"].iloc[-1] > minute_3m["25MA"].iloc[-1] and \
                     minute_3m["ha_close"].iloc[-1] < minute_3m["25MA"].iloc[-1])
