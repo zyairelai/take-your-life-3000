@@ -41,7 +41,8 @@ def heikin_ashi(klines):
     heikin_ashi_df['uptrend'] = heikin_ashi_df.apply(uptrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
 
-    result_cols = ['ha_open', 'ha_high', 'color', '10EMA', '20EMA', '25MA', 'mini', 'downtrend', 'uptrend', 'smooth']
+    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', 'color', '10EMA', '20EMA', '25MA', 
+                   'mini', 'downtrend', 'uptrend', 'smooth']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -72,8 +73,8 @@ def short_despair(pair):
 
     condition_1m =  minute_1m["smooth"].iloc[-1] and all(minute_1m["downtrend"].iloc[-2:])
     condition_3m = (minute_3m["smooth"].iloc[-1] and minute_3m["mini"].iloc[-1]) or \
-                   (minute_3m["open"].iloc[-1] > minute_3m["25MA"].iloc[-1] and \
-                    minute_3m["close"].iloc[-1] < minute_3m["25MA"].iloc[-1])
+                   (minute_3m["ha_open"].iloc[-1] > minute_3m["25MA"].iloc[-1] and \
+                    minute_3m["ha_close"].iloc[-1] < minute_3m["25MA"].iloc[-1])
 
     if condition_1m and condition_3m:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
