@@ -32,9 +32,12 @@ def heikin_ashi(klines):
     heikin_ashi_df.insert(0,'timestamp', klines['timestamp'])
     heikin_ashi_df['ha_high'] = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['high']).max(axis=1)
     heikin_ashi_df['ha_low']  = heikin_ashi_df.loc[:, ['ha_open', 'ha_close']].join(klines['low']).min(axis=1)
+    heikin_ashi_df['10EMA'] = klines['close'].ewm(span=10, adjust=False).mean()
+    heikin_ashi_df['20EMA'] = klines['close'].ewm(span=20, adjust=False).mean()
+    heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['100EMA'] = klines['close'].ewm(span=100, adjust=False).mean()
 
-    result_cols = ['ha_high', '100EMA']
+    result_cols = ['ha_high', 'ha_low', 'ha_open', 'ha_close', '25MA', '100EMA']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -44,6 +47,7 @@ def no_decimal(val):
 
 def cooldown_period(pair):
     cooldown = heikin_ashi(get_klines(pair, "1m"))
+    # print(cooldown)
     if cooldown["ha_high"].iloc[-1] > cooldown["100EMA"].iloc[-1]:
         telegram_bot_sendtext("🥶 COOLDOWN RESET 🥶")
         exit()
@@ -57,5 +61,6 @@ try:
                 requests.exceptions.RequestException) as e:
             print(f"Network error: {e}")
             telegram_bot_sendtext(f"Network error: {e}")
-            exit()
+            time.sleep(30)
+            continue
 except KeyboardInterrupt: print("\n\nAborted.\n")
