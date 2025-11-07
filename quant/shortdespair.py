@@ -19,7 +19,7 @@ print("The DESPAIR script is running...\n")
 
 def get_klines(pair, interval):
     tohlcv_colume = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-    return pandas.DataFrame(ccxt.binance().fetch_ohlcv(pair, interval , limit=50), columns=tohlcv_colume)
+    return pandas.DataFrame(ccxt.binance().fetch_ohlcv(pair, interval , limit=100), columns=tohlcv_colume)
 
 def heikin_ashi(klines):
     heikin_ashi_df = pandas.DataFrame(index=klines.index.values, columns=['ha_open', 'ha_high', 'ha_low', 'ha_close'])
@@ -38,11 +38,9 @@ def heikin_ashi(klines):
     heikin_ashi_df['25MA'] = klines['close'].rolling(window=25).mean()
     heikin_ashi_df['mini'] = heikin_ashi_df.apply(mini_downtrend, axis=1)
     heikin_ashi_df['downtrend'] = heikin_ashi_df.apply(downtrend, axis=1)
-    heikin_ashi_df['uptrend'] = heikin_ashi_df.apply(uptrend, axis=1)
     heikin_ashi_df['smooth'] = heikin_ashi_df.apply(smooth_criminal, axis=1)
 
-    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', 'color', '10EMA', '20EMA', '25MA', 
-                   'mini', 'downtrend', 'uptrend', 'smooth']
+    result_cols = ['ha_open', 'ha_high', 'ha_low', 'ha_close', 'color', '10EMA', '20EMA', '25MA', 'mini', 'downtrend', 'smooth']
     for col in result_cols: heikin_ashi_df[col] = heikin_ashi_df[col].apply(no_decimal)
     return heikin_ashi_df[result_cols]
 
@@ -61,30 +59,26 @@ def mini_downtrend(HA):
 def downtrend(HA):
     return HA['25MA'] > HA['20EMA'] and HA['25MA'] > HA['10EMA'] and HA['20EMA'] > HA['10EMA']
 
-def uptrend(HA):
-    return HA['25MA'] < HA['20EMA'] and HA['25MA'] < HA['10EMA'] and HA['20EMA'] < HA['10EMA']
-
 def smooth_criminal(HA):
     return HA['25MA'] > HA['ha_open']
 
 def short_despair(pair):
-    minute_1m = heikin_ashi(get_klines(pair, "1m"))
     minute_3m = heikin_ashi(get_klines(pair, "3m"))
+    minute_1m = heikin_ashi(get_klines(pair, "1m"))
 
-    condition_1m =  minute_1m["25MA"].iloc[-3:].is_monotonic_decreasing and \
-                    minute_1m["smooth"].iloc[-1] and all(minute_1m["downtrend"].iloc[-2:])
-    condition_3m = (minute_3m["smooth"].iloc[-1] and minute_3m["mini"].iloc[-1]) or \
-                   (minute_3m["ha_open"].iloc[-1] > minute_3m["25MA"].iloc[-1] and \
-                    minute_3m["ha_close"].iloc[-1] < minute_3m["25MA"].iloc[-1])
+    condition_3m = minute_3m["smooth"].iloc[-1] and minute_3m["mini"].iloc[-1] and minute_3m["color"].iloc[-1] == "RED"
+    condition_1m = minute_1m["20EMA"].iloc[-3] > minute_1m["20EMA"].iloc[-2] > minute_1m["20EMA"].iloc[-1] and \
+                   minute_1m["10EMA"].iloc[-3] > minute_1m["10EMA"].iloc[-2] > minute_1m["10EMA"].iloc[-1] and \
+                   all(minute_1m["smooth"].iloc[-3:]) and all(minute_1m["downtrend"].iloc[-2:])
 
-    if condition_1m and condition_3m:
+    if condition_3m and condition_1m:
         telegram_bot_sendtext("💥 TIME TO SHORT 💥")
         exit()
 
 try:
     while True:
         try:
-            short_despair("BTCUSDC")
+            short_despair("BTCUSDT")
             time.sleep(10)
         except (ccxt.RequestTimeout, ccxt.NetworkError, ConnectionResetError, socket.timeout,
                 requests.exceptions.RequestException) as e:
