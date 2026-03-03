@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Check if input file is provided
+if [ -z "$1" ]; then
+  echo "Usage: rotateclockwise <input-video>"
+  exit 1
+fi
+
+input="$1"
+
+# Extract filename and extension
+filename="${input%.*}"
+extension="${input##*.}"
+
+# Output file name
+output="${filename}_rotated.${extension}"
+
+# Run ffmpeg (rotate 90° clockwise)
+ffmpeg -i "$input" -vf "transpose=1" "$output"
+
+echo "Created: $output"
