@@ -18,4 +18,6 @@ output="${filename}_fixed.${extension}"
 # Run ffmpeg
 ffmpeg -i "$input" -vf fps=30 "$output"
 
-echo "Created: $output"
+mv "$output" "$input"
+
+echo "Done!"
