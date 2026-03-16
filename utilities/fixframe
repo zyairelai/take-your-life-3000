@@ -1,23 +1,24 @@
 #!/bin/bash
 
-# Check if input file is provided
-if [ -z "$1" ]; then
-  echo "Usage: fixframe <input-video>"
+# Check if at least one file is provided
+if [ "$#" -eq 0 ]; then
+  echo "Usage: fixframe.sh <video-files>"
   exit 1
 fi
 
-input="$1"
+for input in "$@"; do
+  # Extract filename without extension
+  filename="${input%.*}"
+  extension="${input##*.}"
 
-# Extract filename without extension
-filename="${input%.*}"
-extension="${input##*.}"
+  # Set output filename
+  output="${filename}_fixed.${extension}"
 
-# Set output filename
-output="${filename}_fixed.${extension}"
+  echo "Processing $input..."
 
-# Run ffmpeg
-ffmpeg -i "$input" -vf fps=30 "$output"
+  ffmpeg -i "$input" -vf fps=30 "$output"
 
-mv "$output" "$input"
+  mv "$output" "$input"
+done
 
 echo "Done!"
