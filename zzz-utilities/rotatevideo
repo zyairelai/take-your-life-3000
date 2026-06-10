@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Check if at least one file is provided
+if [ "$#" -eq 0 ]; then
+  echo "Usage: $0 <input-video1> [input-video2 ...]"
+  exit 1
+fi
+
+# Display menu
+echo "[1] Clockwise"
+echo "[2] Anti-Clockwise"
+echo "[0] 180"
+read -p "ENTER: " choice
+
+# Set ffmpeg transpose filter based on choice (defaults to clockwise)
+case "$choice" in
+  2)
+    filter="transpose=2"
+    suffix="anticlockwise"
+    ;;
+  0)
+    filter="transpose=2,transpose=2" # or "hflip,vflip" 
+    suffix="180"
+    ;;
+  1|*)
+    filter="transpose=1"
+    suffix="clockwise"
+    ;;
+esac
+
+# Process all input files
+for input in "$@"; do
+  if [ ! -f "$input" ]; then
+    echo "Warning: File '$input' not found, skipping."
+    continue
+  fi
+
+  # Extract filename and extension
+  filename="${input%.*}"
+  extension="${input##*.}"
+
+  # Output file name
+  output="${filename}_${suffix}.${extension}"
+
+  echo "Processing '$input'..."
+
+  # Run ffmpeg with the selected filter
+  ffmpeg -i "$input" -vf "$filter" -c:a copy "$output" -y
+
+  echo "Created: $output"
+done
+
+echo "Done!"
