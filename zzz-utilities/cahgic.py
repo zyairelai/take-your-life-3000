@@ -109,22 +109,39 @@ def generate_and_save_codes(config):
 # ==========================================
 MY_CONFIG = {
     # 1. Base Prefixes
-    "YEAR_PREFIX": "81",
+    "YEAR_PREFIX": "91",
 
     # 2. State Code Control
     # Set to "auto" to loop 01 to 16, or a specific string (e.g., "1x", "05")
-    "STATE_CODE": "auto",
+    "STATE_CODE": "02",
+    # 01 - Johor
+    # 02 - Kedah
+    # 03 - Kelantan
+    # 04 - Melaka
+    # 05 - Negeri Sembilan
+    # 06 - Pahang
+    # 07 - Penang
+    # 08 - Perak
+    # 09 - Perlis
+    # 10 - Selangor
+    # 11 - Terengganu
+    # 12 - Sabah
+    # 13 - Sarawak
+    # 14 - Federal Territory of Kuala Lumpur
+    # 15 - Federal Territory of Labuan
+    # 16 - Federal Territory of Putrajaya
 
     # 3. Date Controls
     # Set to "auto" to iterate completely, a fixed day like "15", or a wildcard pattern like "1x"
-    "TARGET_MONTH": "05",
-    "TARGET_DATE": "1x",      # Will loop through days 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    "TARGET_MONTH": "12",
+    "TARGET_DATE": "auto",      # Will loop through days 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
 
     # 4. Tail End Controls (Last 4 Digits)
     # Set to "auto" to loop 00-99, a fixed string, or a wildcard pattern like "x5"
     "ZZ_FIRST_TWO": "auto",
-    "ZZ_LAST_TWO": "05"
+    "ZZ_LAST_TWO": "18"
 }
 
 # Run the generator
 generate_and_save_codes(MY_CONFIG)
+# awk '{print $2}' input.txt | sort -n
