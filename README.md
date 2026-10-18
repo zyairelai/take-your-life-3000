@@ -1,38 +1,47 @@
 # 攞你命3000
 ![image](https://user-images.githubusercontent.com/49854907/209444130-6fb4f46c-3f28-4ed7-a8d9-d3de67a8f9be.png)
 
-### P0wny-shell
-- https://github.com/flozz/p0wny-shell
-- https://www.exploit-db.com/exploits/49909
+### Firefox Setup
+- Go to `about:config`
+- set `True` for `toolkit.tabbox.switchByScrolling`
+- set `False` for `ui.key.menuAccessKeyFocuses`
 
-### 好诗，好湿啊
-知天命
+### Sublime Text 
+- Go to `Preferences` -> `Settings` and add the following:
 ```
-金乌坠寒渊，方知我是我。
-温水六十载，梦醒身已驼。
-
-身在寒渊知暗苦，故愿分焰照他人。
-
-身陷泥沼手擎灯，非为圣贤骨血疼。
-皆因识得寒渊味，不忍他人独夜行。
-
-深寒静水是为渊，灵木生火是为焰。
-渊焰相逢混沌开，重定因果逆苍天。
-诸君若以常理测，盲人扪象各纷然。
-须知命外自有命，他在规则诞生前。
+{
+	"update_check": false,
+	"font": 14
+}
 ```
-丙午火
+
+### No Sudo Password Policy
 ```
-金锁沉寒渊，赤龙醒卯烟。
-丙午天火坠，一瞬燃百年。
+sudo dpkg-reconfigure kali-grant-root
+```
 
-百倍非果，而是因；
-烈火焚身后，方见真我存。
+### Docker Setup
+```
+sudo apt update && sudo apt install -y ca-certificates curl gnupg zsh docker-compose-v2 docker.io
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+sudo systemctl enable docker.service
+sudo systemctl enable containerd.service
+```
 
-烈火焚身见真性，温水煮蛙梦未醒。
-若论自由价几何？半付青春半神经。
+# Tmux
+```
+echo -e "set linenumbers" > .nanorc
+echo -e "# Change the prefix key to C-a\nset -g prefix C-a\nunbind C-b\nbind C-a send-prefix\nset-option -g mouse on" > .tmux.conf
+```
 
-未铸黄金印，先持诛心剑。
-俗眼只见襟袖寒，哪识腹中藏天堑？
-待到丙午熔炉开，方知寒铁是吴钩。
+# ZSH Setup
+```
+sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+mv ~/.zshrc ~/.zshrc.bak
+mv ~/.oh-my-zsh/lib/directories.zsh ~/.oh-my-zsh/lib/directories.zsh.bak
+wget https://raw.githubusercontent.com/zyairelai/kali-rice/master/dotfiles/zsh/kali.zshrc -O ~/.zshrc
+wget https://raw.githubusercontent.com/zyairelai/kali-rice/master/dotfiles/zsh/directories.zsh -O ~/.oh-my-zsh/lib/directories.zsh
+wget https://raw.githubusercontent.com/zyairelai/kali-rice/master/dotfiles/zsh/kali.zsh-theme -O ~/.oh-my-zsh/custom/themes/kali.zsh-theme
 ```
