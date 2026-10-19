@@ -30,6 +30,15 @@ sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
 ```
 
+### Clean WSL Rubbish
+```
+docker system prune -a --volumes
+sudo -i
+cd /
+chattr -i -a wsl* 2>/dev/null
+rm -rf wsl*
+```
+
 # Tmux
 ```
 echo -e "set linenumbers" > .nanorc
